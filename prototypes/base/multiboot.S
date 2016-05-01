@@ -1,4 +1,4 @@
-.section .text
+.section multiboot
  
 #define MB_MAGIC 0x1badb002
 #define MB_FLAGS 0x0

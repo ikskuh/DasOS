@@ -1,27 +1,41 @@
 
-AS=clang
-CC=clang
-CXX=clang++
+AS=gcc
+CC=gcc
+CXX=g++
 LD=ld
 
-FLAGS = -ffreestanding -m32
+FLAGS = -ffreestanding -m32 -Wall -iquote include
 ASFLAGS = $(FLAGS)
-CFLAGS = $(FLAGS)
-CXXFLAGS = $(FLAGS)
+CFLAGS = $(FLAGS)	
+CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
 
-SRCS = $(shell find -name '*.[cS]')
+SRCS = $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
 all: kernel-base.ker
 
 kernel-base.ker: $(OBJS)
-	$(LD) -melf_i386 -Ttext=0x1000000 -o kernel-base.ker $(addprefix obj/, $^)
+	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^)
 
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
+  
 %.o: %.c
 	$(CC) $(ASFLAGS) -c -o obj/$@ $<
   
 %.o: %.S
 	$(AS) $(CFLAGS) -c -o obj/$@ $<
+	
+%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
   
-%.o: %.cpp
-	$(CPP) $(CXXFLAGS) -c -o obj/$@ $<
+%.o: src/%.c
+	$(CC) $(ASFLAGS) -c -o obj/$@ $<
+  
+%.o: src/%.S
+	$(AS) $(CFLAGS) -c -o obj/$@ $<
+
+run:
+	qemu-system-i386 -kernel kernel-base.ker
+
+bnr: kernel-base.ker run
