@@ -39,3 +39,6 @@ run:
 	qemu-system-i386 -kernel kernel-base.ker
 
 bnr: kernel-base.ker run
+
+deploy: kernel-base.ker
+	cp kernel-base.ker /srv/tftp/kernel-base.ker
