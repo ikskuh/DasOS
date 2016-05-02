@@ -11,7 +11,7 @@ Screen::Screen(ScreenChar *buffer, int width, int height) :
 {
   this->clear();
 }
-  
+
 void Screen::clear() {
   for(int i = 0; i < this->width * this->height; i++) {
     this->buffer[i].c = ' ';

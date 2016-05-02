@@ -5,6 +5,9 @@
 
 extern "C" void init(void)
 {
-  const char * hw = "Hello World!\nHello new line!";
-	Console::main << hw;
+	Console::main
+		<< "Hello World!\n"
+		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
+		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
+		<< "Hello default color.";
 }
