@@ -25,6 +25,12 @@ private:
   int x;
 	int y;
   Color fg, bg;
+  bool caretEnabled;
+private:
+  /**
+   * Moves the hardware caret.
+   */ 
+  void updateCaret();
 public:
 	Console(Screen *screen);
 	
@@ -42,6 +48,38 @@ public:
    * Scrolls screen a line upwards
    */
   void scroll();
+  
+  /**
+   * Moves the cursor to the given position
+   */
+  void setCursor(int x, int y);
+  
+  /**
+   * Sets the visibility of the caret.
+   */
+  void setCaretVisible(bool visible = true);
+  
+  /**
+   * Sets the text foreground color
+   */
+  void setForeground(Color c) {
+    this->fg = c;
+  }
+  
+  /**
+   * Sets the text background color
+   */
+  void setBackground(Color c) {
+    this->bg = c;
+  }
+  
+  /**
+   * Sets the text colors.
+   */
+  void setColors(Color bg, Color fg) {
+    this->fg = fg;
+    this->bg = bg;
+  }
   
   inline Console & operator << (char c)
   {

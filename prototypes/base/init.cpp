@@ -9,14 +9,9 @@ const char * numbers[] = {
 
 extern "C" void init(void)
 {
-  //*
 	Console::main
 		<< "Hello World!\n"
 		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
-  //*/
-  for(int i = 0; i < 22; i++) {
-    Console::main << "Line " << numbers[i%10] << "\n";
-  }
 }

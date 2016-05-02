@@ -5,9 +5,10 @@ Console Console::main(&Screen::main);
 Console::Console(Screen *screen) : 
   screen(screen),
   x(0), y(0),
-  fg(Color::White), bg(Color::Black)
+  fg(Color::White), bg(Color::Black),
+  caretEnabled(true)
 {
-  
+  this->updateCaret();
 }
 
 void Console::put(char c)
@@ -28,6 +29,7 @@ void Console::put(char c)
   if(this->x >= this->screen->height) {
     this->newline();
   }
+  this->updateCaret();
 }
 
 void Console::newline() {
@@ -37,6 +39,7 @@ void Console::newline() {
   if(this->y >= this->screen->height) {
     this->scroll();
   }
+  this->updateCaret();
 }
 
 void Console::scroll() {
@@ -49,4 +52,35 @@ void Console::scroll() {
     }
   }
   this->y -= 1;
+  this->updateCaret();
+}
+
+void Console::setCursor(int x, int y)
+{
+  if(x < 0)
+    x = 0;
+  else if(x >= this->screen->width)
+    x = this->screen->width - 1;
+  if(y < 0)
+    y = 0;
+  else if(y >= this->screen->height)
+    y = this->screen->height - 1;
+  this->x = x;
+  this->y = y;
+  this->updateCaret();
+}
+
+void Console::updateCaret()
+{
+  if(this->caretEnabled) {
+    // Move caret to current position.
+  } else {
+    // Move caret outside the screen.
+  }
+}
+
+void Console::setCaretVisible(bool visible)
+{
+  this->caretEnabled = visible;
+  this->updateCaret();
 }
