@@ -28,18 +28,28 @@ private:
 public:
 	Console(Screen *screen);
 	
+  /**
+   * Puts a character on the screen.
+   */
 	void put(char c);
 	
+  /**
+   * Inserts a line break and returns the cursor to the start.
+   */
 	void newline();
   
+  /**
+   * Scrolls screen a line upwards
+   */
+  void scroll();
   
-  inline Console operator << (char c)
+  inline Console & operator << (char c)
   {
     this->put(c);
     return *this;
   }
 
-  inline Console operator << (const char *str)
+  inline Console & operator << (const char *str)
   {
     while(*str) {
       *this << *str++;
@@ -47,13 +57,13 @@ public:
     return *this;
   }
   
-  inline Console operator << (const FColor &color)
+  inline Console & operator << (const FColor &color)
   {
     this->fg = color.color;
     return *this;
   }
   
-  inline Console operator << (const BColor &color)
+  inline Console & operator << (const BColor &color)
   {
     this->bg = color.color;
     return *this;

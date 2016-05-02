@@ -25,7 +25,7 @@ void Console::put(char c)
       sc.bg = (int)this->bg;
       break;
   }
-  if(this->x >= this->screen->width) {
+  if(this->x >= this->screen->height) {
     this->newline();
   }
 }
@@ -33,4 +33,20 @@ void Console::put(char c)
 void Console::newline() {
   this->x = 0;
   this->y += 1;
+  
+  if(this->y >= this->screen->height) {
+    this->scroll();
+  }
+}
+
+void Console::scroll() {
+  if(this->y <= 0) {
+    return;
+  }
+  for(int i = 0; i <= this->y; i++) {
+    for(int j = 0; j < this->screen->width; j++) {
+      (*this->screen)(j, i) = (*this->screen)(j, i + 1);
+    }
+  }
+  this->y -= 1;
 }
