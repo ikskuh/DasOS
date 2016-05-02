@@ -37,12 +37,13 @@ class Screen
 {
 private:
   static ScreenChar outOfScreen;
-private:
-  ScreenChar * const buffer;
-  const int width;
-  const int height;
 public:
   static Screen main;
+private:
+  ScreenChar * const buffer;
+public:
+  const int width;
+  const int height;
 public:
   Screen(ScreenChar *buffer, int width, int height);
   

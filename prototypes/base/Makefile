@@ -4,7 +4,7 @@ CC=gcc
 CXX=g++
 LD=ld
 
-FLAGS = -ffreestanding -m32 -Wall -iquote include
+FLAGS = -ffreestanding -m32 -Werror -Wall -iquote include 
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
