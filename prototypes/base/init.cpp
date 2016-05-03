@@ -3,6 +3,7 @@
 #include "console.hpp"
 #include "pmm.hpp"
 #include "numeric.hpp"
+#include "pointer.hpp"
 #include "compat.h"
 
 extern "C" void init(void)
@@ -12,10 +13,13 @@ extern "C" void init(void)
 		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
-  for(int i = 0; i < 4097; i++) {
+  
+  PMM::markOccupied((void*)0x1500);
+  
+  for(int i = 0; i < 10; i++) {
     bool success;
-    void *page = PMM::alloc(success);
-    Console::main << "allocated page " << i << " [" << success << "]: 0x" << page << "\n";
+    physical_t page(PMM::alloc(success));
+    Console::main << "allocated page " << i << " [" << success << "]: 0x" << page.data() << "\n";
   }
 }
 
