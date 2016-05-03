@@ -58,7 +58,7 @@ bool PMM::markOccupied(void *page)
   return wasSet;
 }
 
-void *PMM::alloc()
+void *PMM::alloc(bool &success)
 {
   for(uint32_t idx = 0; idx < BitmapLength; idx++) {
     // fast skip when all bits are set
@@ -76,10 +76,14 @@ void *PMM::alloc()
       
       uint32_t pageId = 32 * idx + bit;
       uint32_t ptr = 4096 * pageId;
+      
+      success = true;
+      
       return ptrcast(ptr);
     }
   }
   // Do something here!
+  success = false;
   return nullptr;
 }
 

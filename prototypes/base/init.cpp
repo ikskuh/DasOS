@@ -12,10 +12,11 @@ extern "C" void init(void)
 		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
-  for(int i = 0; i < 25; i++) {
-    Console::main << (-i) << "\n";
+  for(int i = 0; i < 4097; i++) {
+    bool success;
+    void *page = PMM::alloc(success);
+    Console::main << "allocated page " << i << " [" << success << "]: 0x" << page << "\n";
   }
-  Console::main << "addrof(init) = 0x" << reinterpret_cast<void*>(0xFF00FF) << "\n";
 }
 
 static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");

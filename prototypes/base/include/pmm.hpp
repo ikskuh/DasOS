@@ -16,8 +16,9 @@ public:
 
   /**
    * Allocates a single page.
+   * @param success This boolean will contain true if the allocation was successful.
    */
-  static void* alloc();
+  static void* alloc(bool &success);
 
   /**
    * Frees a given page by pointer.

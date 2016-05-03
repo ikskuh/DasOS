@@ -117,4 +117,6 @@ public:
   Console & operator << (int32_t value);
   
   Console & operator << (void *value);
+  
+  Console & operator << (bool value);
 };

@@ -30,7 +30,7 @@ void Console::clear()
 void Console::put(char c)
 {
   switch(c) {
-  
+    case '\0': return;
     case '\r': break; /* ignore \r */
     case '\n':
       this->newline();
@@ -42,7 +42,7 @@ void Console::put(char c)
       sc.bg = (int)this->bg;
       break;
   }
-  if(this->x >= this->screen->height) {
+  if(this->x >= this->screen->width) {
     this->newline();
   }
   this->updateCaret();
@@ -129,6 +129,16 @@ Console & Console::operator << (void *value)
   size_t len = Numeric::toString(buffer, sizeof(buffer), reinterpret_cast<uint32_t>(value), 16);
   for(size_t i = 0; i < len; i++) {
     this->put(buffer[i]);
+  }
+  return *this;
+}
+
+Console & Console::operator << (bool value)
+{
+  if(value == true) {
+    *this << "true";
+  } else {
+    *this << "false";
   }
   return *this;
 }
