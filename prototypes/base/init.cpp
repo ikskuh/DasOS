@@ -14,7 +14,7 @@ extern "C" void init(void)
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
   
-  PMM::markOccupied((void*)0x1500);
+  PMM::markOccupied(physical_t(0x1500));
   
   for(int i = 0; i < 10; i++) {
     bool success;

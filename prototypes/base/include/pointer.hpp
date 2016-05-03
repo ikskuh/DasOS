@@ -10,6 +10,11 @@
 template<typename TIdent>
 class pointer
 {
+public:
+  /**
+   * A value that declares the pointer invalid.
+   */
+  static pointer invalid;
 private:
   void *ptr;
 public:
@@ -64,6 +69,9 @@ public:
     return this->ptr;
   }
 };
+
+template <class T>
+pointer<T> pointer<T>::invalid(uint32_t(0));
 
 struct physical_t_ident;
 struct virtual_t_ident;

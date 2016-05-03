@@ -20,22 +20,6 @@ static const uint32_t BitmapLength = BitmapSize / 32;
 static uint32_t bitmap[BitmapLength];
 
 /**
- * Casts a pointer to an integer.
- */
-static uint32_t ptrcast(void *ptr)
-{
-  return reinterpret_cast<uint32_t>(ptr);
-}
-
-/**
- * Casts an integer to a pointer
- */
-static void *ptrcast(uint32_t ptr)
-{
-  return reinterpret_cast<void*>(ptr);
-}
-
-/**
  * Checks if an interger is 4096-aligned
  */
 static bool isAligned(uint32_t ptr)
@@ -43,9 +27,9 @@ static bool isAligned(uint32_t ptr)
   return (ptr % 4096) == 0;
 }
 
-bool PMM::markOccupied(void *page)
+bool PMM::markOccupied(physical_t page)
 {
-  uint32_t ptr = ptrcast(page);
+  uint32_t ptr = page.numeric();
   if(!isAligned(ptr))
     ; // Do something about it!
   uint32_t pageId = ptr / 4096;
@@ -58,7 +42,7 @@ bool PMM::markOccupied(void *page)
   return wasSet;
 }
 
-void *PMM::alloc(bool &success)
+physical_t PMM::alloc(bool &success)
 {
   for(uint32_t idx = 0; idx < BitmapLength; idx++) {
     // fast skip when all bits are set
@@ -79,17 +63,17 @@ void *PMM::alloc(bool &success)
       
       success = true;
       
-      return ptrcast(ptr);
+      return physical_t(ptr);
     }
   }
   // Do something here!
   success = false;
-  return nullptr;
+  return physical_t::invalid;
 }
 
-void PMM::free(void *page)
+void PMM::free(physical_t page)
 {
-  uint32_t ptr = ptrcast(page);
+  uint32_t ptr = page.numeric();
   if(!isAligned(ptr))
     ; // Do something about it!
   uint32_t pageId = ptr / 4096;
