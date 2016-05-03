@@ -33,6 +33,11 @@ private:
   void updateCaret();
 public:
 	Console(Screen *screen);
+  
+  /**
+   * Clears the console.
+   */
+   void clear();
 	
   /**
    * Puts a character on the screen.
@@ -106,4 +111,10 @@ public:
     this->bg = color.color;
     return *this;
   }
+  
+  Console & operator << (uint32_t value);
+  
+  Console & operator << (int32_t value);
+  
+  Console & operator << (void *value);
 };

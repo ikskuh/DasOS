@@ -1,11 +1,9 @@
 #include <inttypes.h>
 
 #include "console.hpp"
+#include "pmm.hpp"
+#include "numeric.hpp"
 #include "compat.h"
-
-const char * numbers[] = {
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-};
 
 extern "C" void init(void)
 {
@@ -14,4 +12,10 @@ extern "C" void init(void)
 		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
+  for(int i = 0; i < 25; i++) {
+    Console::main << (-i) << "\n";
+  }
+  Console::main << "addrof(init) = 0x" << reinterpret_cast<void*>(0xFF00FF) << "\n";
 }
+
+static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");

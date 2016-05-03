@@ -1,4 +1,5 @@
 #include "console.hpp"
+#include "numeric.hpp"
 
 Console Console::main(&Screen::main);
 
@@ -8,6 +9,21 @@ Console::Console(Screen *screen) :
   fg(Color::White), bg(Color::Black),
   caretEnabled(true)
 {
+  this->updateCaret();
+}
+
+void Console::clear()
+{
+  for(int y = 0; y < this->screen->height; y++) {
+    for(int x = 0; x < this->screen->width; x++) {
+      auto &c = (*this->screen)(x, y);
+      c.c = ' ';
+      c.fg = (int)this->fg;
+      c.bg = (int)this->bg;
+    }
+  }
+  this->x = 0;
+  this->y = 0;
   this->updateCaret();
 }
 
@@ -83,4 +99,36 @@ void Console::setCaretVisible(bool visible)
 {
   this->caretEnabled = visible;
   this->updateCaret();
+}
+
+
+
+Console & Console::operator << (uint32_t value)
+{
+  char buffer[12];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), value, 10);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}
+
+Console & Console::operator << (int32_t value)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), value, 10);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}
+
+Console & Console::operator << (void *value)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), reinterpret_cast<uint32_t>(value), 16);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
 }

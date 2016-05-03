@@ -1,6 +1,6 @@
 #include <inttypes.h>
+#include <stddef.h>
 #include "pmm.hpp"
-
 
 /**
  * Number stored of pages in the bitmap
@@ -19,16 +19,25 @@ static const uint32_t BitmapLength = BitmapSize / 32;
  */
 static uint32_t bitmap[BitmapLength];
 
+/**
+ * Casts a pointer to an integer.
+ */
 static uint32_t ptrcast(void *ptr)
 {
   return reinterpret_cast<uint32_t>(ptr);
 }
 
+/**
+ * Casts an integer to a pointer
+ */
 static void *ptrcast(uint32_t ptr)
 {
   return reinterpret_cast<void*>(ptr);
 }
 
+/**
+ * Checks if an interger is 4096-aligned
+ */
 static bool isAligned(uint32_t ptr)
 {
   return (ptr % 4096) == 0;
@@ -84,5 +93,6 @@ void PMM::free(void *page)
   uint32_t idx = pageId / 32;
   uint32_t bit = pageId % 32;
   
+  // Mark the selected bit as free.
   bitmap[idx] &= ~(1<<bit);
 }

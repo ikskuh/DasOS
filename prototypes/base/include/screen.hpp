@@ -51,7 +51,7 @@ public:
   
   ScreenChar & operator ()(int x, int y) {
     if(x < 0 || y < 0 || x >= this->width || y >= this->height) {
-      // return Screen::outOfScreen;
+      return Screen::outOfScreen;
     }
     return this->buffer[this->width * y + x];
   }
