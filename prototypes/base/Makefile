@@ -35,6 +35,13 @@ kernel-base.ker: $(OBJS)
 %.o: src/%.S
 	$(AS) $(CFLAGS) -c -o obj/$@ $<
 
+# Linux/Multiboot boot specific:
+# -kernel bzImage use 'bzImage' as kernel image
+# -append cmdline use 'cmdline' as kernel command line
+# -initrd file    use 'file' as initial ram disk
+# -dtb    file    use 'file' as device tree image
+
+
 run:
 	qemu-system-i386 -kernel kernel-base.ker
 

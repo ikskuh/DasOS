@@ -7,7 +7,9 @@
 #include "multiboot.hpp"
 #include "compat.h"
 
-extern "C" void init(void)
+using namespace multiboot;
+
+extern "C" void init(Structure *data)
 {
 	Console::main
 		<< "Hello World!\n"
@@ -15,13 +17,20 @@ extern "C" void init(void)
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
   
-  PMM::markOccupied(physical_t(0x1500));
+  Console::main
+    << "multiboot structure: 0x" << data << "\n"
+    << "bootloader name:     " << data->bootLoaderName << "\n"
+    << "command line:        " << data->commandline << "\n"
+    << "count of modules:    " << data->modules.length << "\n";
   
+  /*
+  PMM::markOccupied(physical_t(0x1500));
   for(int i = 0; i < 10; i++) {
     bool success;
     physical_t page(PMM::alloc(success));
     Console::main << "allocated page " << i << " [" << success << "]: 0x" << page.data() << "\n";
   }
+  */
 }
 
 static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");
