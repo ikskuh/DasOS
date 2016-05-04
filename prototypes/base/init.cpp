@@ -8,6 +8,7 @@
 #include "compat.h"
 
 using namespace multiboot;
+using namespace console_tools;
 
 extern "C" void init(Structure const & data)
 {
@@ -28,21 +29,31 @@ extern "C" void init(Structure const & data)
     }
     Console::main
       << "mmap: "
-      << (uint32_t)mmap.base << "+" << (uint32_t)mmap.length
+      << "start: " << hex(mmap.base) << ", length: " << hex(mmap.length)
       << ", " << mmap.entry_size
       << ", " << sizeof(mmap)
-      << ",  free:" << mmap.isFree()
+      << ", free:" << mmap.isFree()
       << "\n";
+    if(mmap.base > 0xFFFFFFFF) {
+        Console::main << "mmap out of 4 gigabyte range." << "\n";
+        continue;
+    }    
+    if(mmap.isFree()) {      
+      // Mark all free memory free...
+      uintptr_t lower = (mmap.base + 0x0FFF) & 0xFFFFF000; // align at upper 4096
+      uintptr_t upper = (mmap.base + mmap.length) & 0xFFFFF000; // align at lower 4096
+      while (lower < upper) {
+          PMM::markFree(physical_t(lower));
+          lower += 0x1000;
+      }
+    }
   }
   
-  /*
-  PMM::markOccupied(physical_t(0x1500));
   for(int i = 0; i < 10; i++) {
     bool success;
-    physical_t page(PMM::alloc(success));
-    Console::main << "allocated page " << i << " [" << success << "]: 0x" << page.data() << "\n";
+    physical_t page = PMM::alloc(success);
+    Console::main << "allocated page " << i << " [" << success << "]: " << page << "\n";
   }
-  */
 }
 
 static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");
