@@ -14,8 +14,8 @@ static const uint32_t BitmapLength = BitmapSize / 32;
 
 /**
  * Bitmap that stores the page status.
- * A set bit marks a used page
- * An unset bit marks an unused page
+ * A set bit marks a page as free.
+ * An unset bit marks a page as used.
  */
 static uint32_t bitmap[BitmapLength];
 
@@ -27,7 +27,7 @@ static bool isAligned(uint32_t ptr)
   return (ptr % 4096) == 0;
 }
 
-bool PMM::markOccupied(physical_t page)
+void PMM::markFree(physical_t page)
 {
   uint32_t ptr = page.numeric();
   if(!isAligned(ptr))
@@ -37,26 +37,25 @@ bool PMM::markOccupied(physical_t page)
   uint32_t idx = pageId / 32;
   uint32_t bit = pageId % 32;
   
-  bool wasSet = (bitmap[idx] & (1<<bit)) != 0;
   bitmap[idx] |= (1<<bit);
-  return wasSet;
 }
 
 physical_t PMM::alloc(bool &success)
 {
   for(uint32_t idx = 0; idx < BitmapLength; idx++) {
-    // fast skip when all bits are set
-    if(bitmap[idx] == 0xFFFFFFFF) {
+    // fast skip when no bit is set
+    if(bitmap[idx] == 0) {
       continue;
     }
     for(uint32_t bit = 0; bit < 32; bit++) {
       uint32_t mask = (1<<bit);
-      if((bitmap[idx] & mask) != 0) {
+      if((bitmap[idx] & mask) == 0) {
+        // If bit is not set, ignore the bit.
         continue;
       }
       
       // Mark the selected bit as used.
-      bitmap[idx] |= mask;
+      bitmap[idx] &= ~mask;
       
       uint32_t pageId = 32 * idx + bit;
       uint32_t ptr = 4096 * pageId;
@@ -82,5 +81,5 @@ void PMM::free(physical_t page)
   uint32_t bit = pageId % 32;
   
   // Mark the selected bit as free.
-  bitmap[idx] &= ~(1<<bit);
+  bitmap[idx] |= (1<<bit);
 }

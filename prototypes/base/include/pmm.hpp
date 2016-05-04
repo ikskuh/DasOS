@@ -11,10 +11,9 @@ private:
   PMM() = delete;
 public:
   /**
-   * Marks a page as occupied by external memory management.
-   * @returns true if the page was previously free, false if it was already allocated.
+   * Marks a page as free by external memory management.
    */
-  static bool markOccupied(physical_t page);
+  static void markFree(physical_t page);
 
   /**
    * Allocates a single page.
