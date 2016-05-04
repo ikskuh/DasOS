@@ -33,6 +33,13 @@ namespace multiboot
     T const & operator [](size_t idx) {
       return this->data[idx];
     }
+    
+    const T *begin() const {
+      return &data[0];
+    }
+    const T *end() const {
+      return &data[length];
+    }
   } __attribute__((packed));
   
   // Make sure the size is not dependend on the template parameter

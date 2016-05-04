@@ -8,6 +8,7 @@
 _start:
   mov $kernel_stack, %esp
  
+  push %ebx
   call compat_call_ctors
   call init
   call compat_call_dtors

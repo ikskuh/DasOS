@@ -9,7 +9,7 @@
 
 using namespace multiboot;
 
-extern "C" void init(Structure *data)
+extern "C" void init(Structure const * data)
 {
 	Console::main
 		<< "Hello World!\n"
@@ -22,6 +22,11 @@ extern "C" void init(Structure *data)
     << "bootloader name:     " << data->bootLoaderName << "\n"
     << "command line:        " << data->commandline << "\n"
     << "count of modules:    " << data->modules.length << "\n";
+  
+  for(const Module &module : data->modules) {
+    Console::main
+      << "Module " << module.name << "\n";
+  }
   
   /*
   PMM::markOccupied(physical_t(0x1500));
