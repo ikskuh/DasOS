@@ -4,7 +4,7 @@ CC=gcc
 CXX=g++
 LD=ld
 
-FLAGS = -ffreestanding -m32 -Werror -Wall -iquote include 
+FLAGS = -ffreestanding -m32 -Werror -Wall -iquote include -O3
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
@@ -12,10 +12,12 @@ CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore
 SRCS = $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
+LIBGCC = $(shell gcc -m32 -print-libgcc-file-name)
+
 all: kernel-base.ker
 
 kernel-base.ker: $(OBJS)
-	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^)
+	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^) $(LIBGCC) 
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
