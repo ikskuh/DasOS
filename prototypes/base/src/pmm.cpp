@@ -40,6 +40,19 @@ void PMM::markFree(physical_t page)
   bitmap[idx] |= (1<<bit);
 }
 
+void PMM::markUsed(physical_t page)
+{
+  uint32_t ptr = page.numeric();
+  if(!isAligned(ptr))
+    ; // Do something about it!
+  uint32_t pageId = ptr / 4096;
+  
+  uint32_t idx = pageId / 32;
+  uint32_t bit = pageId % 32;
+  
+  bitmap[idx] &= ~(1<<bit);
+}
+
 physical_t PMM::alloc(bool &success)
 {
   for(uint32_t idx = 0; idx < BitmapLength; idx++) {

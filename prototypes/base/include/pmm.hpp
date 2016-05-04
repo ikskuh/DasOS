@@ -14,6 +14,11 @@ public:
    * Marks a page as free by external memory management.
    */
   static void markFree(physical_t page);
+  
+  /**
+   * Marks a page as used by external memory management.
+   */
+  static void markUsed(physical_t page);
 
   /**
    * Allocates a single page.
