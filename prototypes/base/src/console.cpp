@@ -142,3 +142,18 @@ Console & Console::operator << (bool value)
   }
   return *this;
 }
+
+
+template<>
+Console & Console::operator << <physical_t_ident>(physical_t ptr) 
+{
+  *this << "physical(0x" << ptr.data() << ")";
+  return *this;
+}
+
+template<>
+Console & Console::operator << <virtual_t_ident>(virtual_t ptr) 
+{
+  *this << "virtual(0x" << ptr.data() << ")";
+  return *this;
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "screen.hpp"
+#include "pointer.hpp"
 
 struct FColor
 {
@@ -119,4 +120,7 @@ public:
   Console & operator << (void *value);
   
   Console & operator << (bool value);
+  
+  template<typename T>
+  Console & operator << (pointer<T> ptr);
 };
