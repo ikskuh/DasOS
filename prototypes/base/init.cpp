@@ -4,6 +4,7 @@
 #include "pmm.hpp"
 #include "numeric.hpp"
 #include "pointer.hpp"
+#include "multiboot.hpp"
 #include "compat.h"
 
 extern "C" void init(void)

@@ -71,7 +71,7 @@ public:
 };
 
 template <class T>
-pointer<T> pointer<T>::invalid(uint32_t(0));
+pointer<T> pointer<T>::invalid(uint32_t(0xFFFFFFFF));
 
 struct physical_t_ident;
 struct virtual_t_ident;
@@ -87,3 +87,6 @@ using physical_t = pointer<physical_t_ident>;
  * A pointer pointing to virtual memory.
  */
 using virtual_t = pointer<virtual_t_ident>;
+
+
+static_assert(sizeof(physical_t) == 4, "pointer is not 4 byte wide.");
