@@ -1,5 +1,6 @@
 #include "console.hpp"
 #include "numeric.hpp"
+#include "io.hpp"
 
 Console Console::main(&Screen::main);
 
@@ -88,11 +89,16 @@ void Console::setCursor(int x, int y)
 
 void Console::updateCaret()
 {
+  uint16_t tmp;
   if(this->caretEnabled) {
-    // Move caret to current position.
+    tmp = this->y * this->screen->width + this->x;
   } else {
-    // Move caret outside the screen.
+    tmp = this->screen->height * this->screen->width;
   }
+  outb(0x3D4, 14);
+  outb(0x3D5, tmp >> 8);
+  outb(0x3D4, 15);
+  outb(0x3D5, tmp);
 }
 
 void Console::setCaretVisible(bool visible)
