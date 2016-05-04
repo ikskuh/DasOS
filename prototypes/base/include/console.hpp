@@ -17,6 +17,33 @@ struct BColor
   Color color;
 };
 
+template<typename T>
+struct NumericFormat
+{
+  T value;
+  uint32_t base;
+
+  NumericFormat(T value, uint32_t base) : value(value), base(base) { }
+};
+
+namespace console_tools
+{
+  template<typename T>
+  auto hex(T value) { return NumericFormat<T>(value, 16); }
+  
+  template<typename T>
+  auto dec(T value) { return NumericFormat<T>(value, 10); }
+  
+  template<typename T>
+  auto oct(T value) { return NumericFormat<T>(value, 8); }
+  
+  template<typename T>
+  auto bin(T value) { return NumericFormat<T>(value, 2); }
+  
+  template<typename T>
+  auto nbase(T value, uint32_t base) { return NumericFormat<T>(value, base); }
+}
+
 class Console
 {
 public:
@@ -123,4 +150,7 @@ public:
   
   template<typename T>
   Console & operator << (pointer<T> ptr);
+  
+  template<typename T>
+  Console & operator << (const NumericFormat<T> &fmt);
 };

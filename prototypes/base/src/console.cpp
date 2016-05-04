@@ -163,3 +163,47 @@ Console & Console::operator << <virtual_t_ident>(virtual_t ptr)
   *this << "virtual(0x" << ptr.data() << ")";
   return *this;
 }
+
+template<>
+Console & Console::operator << <uint32_t>(const NumericFormat<uint32_t> & fmt)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}
+
+template<>
+Console & Console::operator << <int32_t>(const NumericFormat<int32_t> & fmt)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}
+
+template<>
+Console & Console::operator << <uint64_t>(const NumericFormat<uint64_t> & fmt)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}
+
+template<>
+Console & Console::operator << <int64_t>(const NumericFormat<int64_t> & fmt)
+{
+  char buffer[13];
+  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
+  for(size_t i = 0; i < len; i++) {
+    this->put(buffer[i]);
+  }
+  return *this;
+}

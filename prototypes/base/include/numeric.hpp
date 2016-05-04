@@ -22,6 +22,11 @@ public:
     size_t length,
     uint32_t number, 
     uint32_t radix = 10);
+  static size_t toString(
+    char *buffer, 
+    size_t length,
+    uint64_t number, 
+    uint32_t radix = 10);
     
   /**
    * Converts a signed number to a string.
@@ -35,5 +40,10 @@ public:
     char *buffer, 
     size_t length,
     int32_t number, 
+    uint32_t radix = 10);
+  static size_t toString(
+    char *buffer, 
+    size_t length,
+    int64_t number, 
     uint32_t radix = 10);
 };
