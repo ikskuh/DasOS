@@ -68,7 +68,7 @@ public:
   explicit operator void * () const {
     return this->ptr;
   }
-};
+} __attribute__((packed));
 
 template <class T>
 pointer<T> pointer<T>::invalid(uint32_t(0xFFFFFFFF));

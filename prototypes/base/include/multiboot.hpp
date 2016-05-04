@@ -1,7 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
-
+#include "pointer.hpp"
 
 #define MB_MEMSIZE (1<<0)
 #define MB_BOOTDEVICE (1<<1)
@@ -20,6 +20,25 @@
 
 namespace multiboot
 {
+  template<typename T>
+  class mbarray
+  {
+  public:
+    const uint32_t length;
+  private:
+    T *data;
+    
+    mbarray() = delete;
+  public:
+    T const & operator [](size_t idx) {
+      return this->data[idx];
+    }
+  } __attribute__((packed));
+  
+  // Make sure the size is not dependend on the template parameter
+  MB_ASSERT_SIZE(mbarray<uint8_t>, 8);
+  MB_ASSERT_SIZE(mbarray<uint32_t>, 8);
+
   struct MemoryMap
   {
       uint32_t entry_size;
@@ -32,8 +51,8 @@ namespace multiboot
 
   struct Module
   {
-      uintptr_t start;
-      uintptr_t end;
+      physical_t start;
+      physical_t end;
       const char * name;
       uint32_t reserved;
   } __attribute__((packed));
@@ -48,8 +67,28 @@ namespace multiboot
       uint16_t cylinders;
       uint8_t heads;
       uint8_t sectors;
-      uint16_t ports[0];
+      
       // 0x10	size-0x10	drive_ports	I/O-Ports, die von diesem Gerät benutzt werden
+      // uint16_t ports[0];
+      
+      /**
+       * Gets the number of ports used by this drive.
+       */
+      uint32_t portCount() const {
+        return (this->size - 0x10) / sizeof(uint16_t);
+      }
+      
+      /** 
+       * Gets the given port.
+       * @return The port #idx or 0 if out of range.
+       */
+      uint16_t port(size_t idx) const {
+        uint16_t const * ports = reinterpret_cast<uint16_t const *>(reinterpret_cast<uint8_t const *>(this) + 0x10);
+        if(idx >= this->portCount()) {
+          return 0;
+        }
+        return ports[idx];
+      }
   } __attribute__((packed));
 
   static_assert(sizeof(Drive) >= 10, "multiboot::Drive must be at least 12 bytes large.");
@@ -72,12 +111,11 @@ namespace multiboot
   struct Structure
   {
       uint32_t flags;
-      uint32_t memLower;
-      uint32_t memUpper;
+      physical_t memLower;
+      physical_t memUpper;
       uint32_t bootDevice;
       const char * commandline;
-      uint32_t moduleCount;
-      Module * modules;
+      mbarray<Module> modules;
       union {
           struct {
               uint32_t tabsize;
@@ -92,11 +130,9 @@ namespace multiboot
               uintptr_t shndx;
           } __attribute__((packed)) symsELF;
       };
-      uint32_t memoryMapLength;
-      const MemoryMap * memoryMap;
-      uint32_t drivesLength;
-      const Drive * drives;
-      uintptr_t configTable;
+      mbarray<MemoryMap> memoryMaps;
+      mbarray<Drive> drives;
+      physical_t configTable;
       const char * bootLoaderName;
       const APMTable * apmTable;
       struct {
