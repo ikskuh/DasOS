@@ -5,7 +5,7 @@
 /**
  * Number stored of pages in the bitmap
  */
-static const uint32_t BitmapSize = 4096; /* 16 MB */
+static const uint32_t BitmapSize = 1048576; /* 4 GB */
 
 /**
  * Number of 32-bit tuples in the bitmap.
