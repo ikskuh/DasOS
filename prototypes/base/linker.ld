@@ -6,7 +6,7 @@ SECTIONS
 {
     . = 0x100000;
 
-    kernelStart = .;
+    kernelStartMarker = .;
 
     .text : {
         *(multiboot)
@@ -33,5 +33,5 @@ SECTIONS
 
     /* Align the end of the kernel to the page size */
     . = ALIGN(4096);
-    kernelEnd = .;
+    kernelEndMarker = .;
 }
