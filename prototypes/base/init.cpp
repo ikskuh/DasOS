@@ -9,7 +9,7 @@
 
 using namespace multiboot;
 
-extern "C" void init(Structure const * data)
+extern "C" void init(Structure const & data)
 {
 	Console::main
 		<< "Hello World!\n"
@@ -18,14 +18,21 @@ extern "C" void init(Structure const * data)
 		<< "Hello default color.\n";
   
   Console::main
-    << "multiboot structure: 0x" << data << "\n"
-    << "bootloader name:     " << data->bootLoaderName << "\n"
-    << "command line:        " << data->commandline << "\n"
-    << "count of modules:    " << data->modules.length << "\n";
-  
-  for(const Module &module : data->modules) {
+    << "bootloader name:  " << data.bootLoaderName << "\n"
+    << "command line:     " << data.commandline << "\n"
+    << "count of modules: " << data.modules.length << "\n"
+    << "count of mmaps:   " << data.memoryMaps.length << "\n";
+  for(auto &mmap : data.memoryMaps) {
+    if(mmap.length == 0) {
+      continue;
+    }
     Console::main
-      << "Module " << module.name << "\n";
+      << "mmap: "
+      << (uint32_t)mmap.base << "+" << (uint32_t)mmap.length
+      << ", " << mmap.entry_size
+      << ", " << sizeof(mmap)
+      << ",  free:" << mmap.isFree()
+      << "\n";
   }
   
   /*

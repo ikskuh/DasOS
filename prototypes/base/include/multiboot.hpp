@@ -52,6 +52,12 @@ namespace multiboot
       uint64_t base;
       uint64_t length;
       uint32_t type;
+      
+      
+      bool isFree() const {
+        return this->type == 1;
+      }
+      
   } __attribute__((packed));
 
   MB_ASSERT_SIZE(MemoryMap, 24);
@@ -62,6 +68,11 @@ namespace multiboot
       physical_t end;
       const char * name;
       uint32_t reserved;
+      
+      uint32_t size() const {
+        return this->end.numeric() - this->start.numeric();
+      }
+      
   } __attribute__((packed));
 
   MB_ASSERT_SIZE(Module, 16);
