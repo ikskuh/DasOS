@@ -59,6 +59,11 @@ private:
    * Moves the hardware caret.
    */ 
   void updateCaret();
+	
+	/**
+	 * Prints the prefix for a given numeric base.
+	 */
+	void printNumericPrefix(uint32_t base);
 public:
 	Console(Screen *screen);
   
