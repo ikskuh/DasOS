@@ -30,4 +30,9 @@ public:
    * Frees a given page by pointer.
    */
   static void free(physical_t page);
+  
+  /**
+   * Returns the free memory.
+   */
+  static uint32_t getFreeMemory();
 };

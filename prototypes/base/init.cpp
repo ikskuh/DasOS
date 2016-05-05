@@ -33,12 +33,14 @@ extern "C" void init(Structure const & data)
     if(mmap.length == 0) {
       continue;
     }
+    if(mmap.isFree() == false) {
+      continue;
+    }
     Console::main
       << "mmap: "
       << "start: " << hex(mmap.base) << ", length: " << hex(mmap.length)
       << ", " << mmap.entry_size
       << ", " << sizeof(mmap)
-      << ", free:" << mmap.isFree()
       << "\n";
     if(mmap.base > 0xFFFFFFFF) {
         Console::main << "mmap out of 4 gigabyte range." << "\n";
@@ -67,11 +69,23 @@ extern "C" void init(Structure const & data)
     ptr += 0x1000;
   }
   
+  auto freeMemory = PMM::getFreeMemory();
+  Console::main
+    << "Free: "
+    << (freeMemory >> 20) << "MB, "
+    << (freeMemory >> 10) << "KB, "
+    << (freeMemory >>  0) << "B, "
+    << (freeMemory >> 12) << "Pages\n";
+  
+  /*
   for(int i = 0; i < 10; i++) {
     bool success;
     physical_t page = PMM::alloc(success);
     Console::main << "allocated page " << i << " [" << success << "]: " << page << "\n";
   }
+  */
+  
+  
 }
 
 static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");

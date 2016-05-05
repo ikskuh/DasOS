@@ -96,3 +96,23 @@ void PMM::free(physical_t page)
   // Mark the selected bit as free.
   bitmap[idx] |= (1<<bit);
 }
+
+uint32_t PMM::getFreeMemory()
+{
+  uint32_t freeMemory = 0;
+  for(uint32_t idx = 0; idx < BitmapLength; idx++) {
+    // fast skip when no bit is set
+    if(bitmap[idx] == 0) {
+      continue;
+    }
+    for(uint32_t bit = 0; bit < 32; bit++) {
+      uint32_t mask = (1<<bit);
+      if((bitmap[idx] & mask) == 0) {
+        // If bit is not set, ignore the bit.
+        continue;
+      }
+      freeMemory += 0x1000; 
+    }
+  }
+  return freeMemory;
+}
