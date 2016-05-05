@@ -56,23 +56,55 @@ void IDT::dispatch(CpuState *cpu)
 {
 	using namespace console_tools;
 
-	Console::main << "Ermahgerd, Interrupts!\n";
+	if(cpu->interrupt <= 0x1F) {
+		// Exception Handling
 	
-	Console::main 
-		<< "eax    = " << hex(cpu->eax) << "\n"
-		<< "ebx    = " << hex(cpu->ebx) << "\n"
-		<< "ecx    = " << hex(cpu->ecx) << "\n"
-		<< "edx    = " << hex(cpu->edx) << "\n"
-		<< "esi    = " << hex(cpu->esi) << "\n"
-		<< "edi    = " << hex(cpu->edi) << "\n"
-		<< "ebp    = " << hex(cpu->ebp) << "\n"
-		<< "intr   = " << cpu->intr << "\n"
-		<< "error  = " << cpu->error << "\n"
-		<< "eip    = " << hex(cpu->eip) << "\n"
-		<< "cs     = " << hex(cpu->cs) << "\n"
-		<< "eflags = " << bin(cpu->eflags) << "\n"
-		<< "esp    = " << hex(cpu->esp) << "\n"
-		<< "ss     = " << hex(cpu->ss) << "\n";
+		Console::main << FColor(Color::Red) <<  "Ermahgerd, Exceptions!\n";
+		Console::main 
+			<< "eax    = " << hex(cpu->eax) << "\n"
+			<< "ebx    = " << hex(cpu->ebx) << "\n"
+			<< "ecx    = " << hex(cpu->ecx) << "\n"
+			<< "edx    = " << hex(cpu->edx) << "\n"
+			<< "esi    = " << hex(cpu->esi) << "\n"
+			<< "edi    = " << hex(cpu->edi) << "\n"
+			<< "ebp    = " << hex(cpu->ebp) << "\n"
+			<< "intr   = " << cpu->interrupt << "\n"
+			<< "error  = " << cpu->error << "\n"
+			<< "eip    = " << hex(cpu->eip) << "\n"
+			<< "cs     = " << hex(cpu->cs) << "\n"
+			<< "eflags = " << bin(cpu->eflags) << "\n"
+			<< "esp    = " << hex(cpu->esp) << "\n"
+			<< "ss     = " << hex(cpu->ss) << "\n";
+		
+		while(true);
+	} else if (cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F) {
 	
-	while(true);
+		// IRQ
+		Console::main << "[IRQ " << (cpu->interrupt - 0x20) << "]";
+	
+		if(cpu->interrupt >= 0x28) {
+			slavePIC.sendEndOfInterrupt();
+		}
+		masterPIC.sendEndOfInterrupt();
+	} else {
+		// Other Interrupt
+		Console::main << "Ermahgerd, Interrupts!\n";
+		Console::main 
+			<< "eax    = " << hex(cpu->eax) << "\n"
+			<< "ebx    = " << hex(cpu->ebx) << "\n"
+			<< "ecx    = " << hex(cpu->ecx) << "\n"
+			<< "edx    = " << hex(cpu->edx) << "\n"
+			<< "esi    = " << hex(cpu->esi) << "\n"
+			<< "edi    = " << hex(cpu->edi) << "\n"
+			<< "ebp    = " << hex(cpu->ebp) << "\n"
+			<< "intr   = " << cpu->interrupt << "\n"
+			<< "error  = " << cpu->error << "\n"
+			<< "eip    = " << hex(cpu->eip) << "\n"
+			<< "cs     = " << hex(cpu->cs) << "\n"
+			<< "eflags = " << bin(cpu->eflags) << "\n"
+			<< "esp    = " << hex(cpu->esp) << "\n"
+			<< "ss     = " << hex(cpu->ss) << "\n";
+			
+			while(true);
+	}
 }

@@ -12,7 +12,7 @@ struct CpuState
 	uint32_t   edi;
 	uint32_t   ebp;
 
-	uint32_t   intr;
+	uint32_t   interrupt;
 	uint32_t   error;
 
 	uint32_t   eip;

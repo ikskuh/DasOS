@@ -22,3 +22,8 @@ void PIC::maskInterrupts(uint8_t mask)
 {
 	outb(this->port + 0x01, mask);
 }
+
+void PIC::sendEndOfInterrupt()
+{
+	outb(this->port + 0x00, 0x20);
+}
