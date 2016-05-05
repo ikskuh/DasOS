@@ -37,9 +37,6 @@ void BSOD::die(Error code, const char *msg, CpuState *cpu)
 			<< "esp    = " << hex(cpu->esp) << "\n"
 			<< "ss     = " << hex(cpu->ss) << "\n";
 	
-	
-	
-	
 	asm volatile ("hlt");
 	while(true);
 }

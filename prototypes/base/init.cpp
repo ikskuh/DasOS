@@ -97,8 +97,6 @@ extern "C" void init(Structure const & data)
     Console::main << "allocated page " << i << " [" << success << "]: " << page << "\n";
   }
   */
-	
-	asm volatile("int $0x1");
   
   while(true);
 }
