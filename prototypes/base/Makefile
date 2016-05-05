@@ -47,7 +47,7 @@ kernel-base.ker: $(OBJS)
 
 
 run:
-	qemu-system-i386 -kernel kernel-base.ker -m 64
+	qemu-system-i386 -kernel kernel-base.ker -m 64 -d int
 
 bnr: kernel-base.ker run
 

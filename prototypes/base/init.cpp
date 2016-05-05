@@ -8,6 +8,7 @@
 #include "gdt.hpp"
 #include "idt.hpp"
 #include "compat.h"
+#include "io.hpp"
 
 using namespace multiboot;
 using namespace console_tools;
@@ -80,11 +81,14 @@ extern "C" void init(Structure const & data)
     << (freeMemory >> 10) << "KB, "
     << (freeMemory >>  0) << "B, "
     << (freeMemory >> 12) << "Pages\n";
-  
+
 	IDT::initialize();
 
-	asm volatile("int $0x00");
-	// asm volatile("cli");
+	Console::main << "Interrupts set up.\n";
+	
+	asm volatile("sti");
+	
+	Console::main << "Interrupts enabled.\n";
 	
   /*
   for(int i = 0; i < 10; i++) {
@@ -94,7 +98,7 @@ extern "C" void init(Structure const & data)
   }
   */
   
-  
+  while(true);
 }
 
 static_assert(sizeof(void*) == 4, "Target platform is not 32 bit.");

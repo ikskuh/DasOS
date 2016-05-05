@@ -65,6 +65,7 @@ private:
 	IDT() = delete;
 	
 	static void dispatch(CpuState *cpu);
+	static void setupPIC();
 public:
 
 	static InterruptDescriptor & descriptor(uint32_t idx);

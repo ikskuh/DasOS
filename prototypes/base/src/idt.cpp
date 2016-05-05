@@ -1,4 +1,5 @@
 #include "idt.hpp"
+#include "io.hpp"
 #include "console.hpp"
 
 #define ISR(num) extern "C" void isr_##num();
@@ -28,7 +29,7 @@ void IDT::initialize()
 #include "../interrupt-list.inc"
 #undef ISR
 #undef ISR_ERR
-	
+
 	struct {
 		uint16_t limit;
 		void* pointer;
@@ -37,6 +38,26 @@ void IDT::initialize()
 		.pointer = IDT::descriptors,
 	};
 	asm volatile("lidt %0" : : "m" (idtp));
+	
+	IDT::setupPIC();
+}
+
+void IDT::setupPIC()
+{
+	outb(0x20, 0x11);
+	outb(0x21, 0x20);
+	outb(0x21, 0x04);
+	outb(0x21, 0x01);
+
+	// Slave-PIC
+	outb(0xa0, 0x11);
+	outb(0xa1, 0x28);
+	outb(0xa1, 0x02);
+	outb(0xa1, 0x01);
+
+	// Demask all interrupts
+	outb(0x20, 0x0);
+	outb(0xa0, 0x0);
 }
 
 void IDT::dispatch(CpuState *cpu)
