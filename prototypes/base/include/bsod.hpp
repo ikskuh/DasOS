@@ -1,6 +1,7 @@
 #pragma once
 
 #include "errors.hpp"
+#include "cpustate.hpp"
 
 /**
  * This class provides the blue screen of death.
@@ -16,5 +17,10 @@ public:
    * Dies with a simple message and error code display.
    */
   static void die(Error code, const char *msg);
+	
+  /**
+   * Dies with a simple message and error code display.
+   */
+  static void die(Error code, const char *msg, CpuState *cpu);
 
 };
