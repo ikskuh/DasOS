@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include "enums.hpp"
 
 enum class SegmentAccess : uint8_t
 {
@@ -19,6 +20,8 @@ enum class SegmentAccess : uint8_t
 	Present    = (1<<7),
 };
 
+ENUM_CLASS_OPERATORS(SegmentAccess)
+
 enum class SegmentFlags : uint8_t
 {
 	None      = 0,
@@ -28,35 +31,7 @@ enum class SegmentFlags : uint8_t
 	Use4KSize = (1<<3),
 };
 
-static inline SegmentAccess operator | (SegmentAccess lhs, SegmentAccess rhs)
-{
-	return static_cast<SegmentAccess>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
-
-static inline SegmentAccess operator & (SegmentAccess lhs, SegmentAccess rhs)
-{
-	return static_cast<SegmentAccess>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
-}
-
-static inline bool operator * (SegmentAccess lhs, SegmentAccess rhs)
-{
-	return (static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs)) != 0;
-}
-
-static inline SegmentFlags operator | (SegmentFlags lhs, SegmentFlags rhs)
-{
-	return static_cast<SegmentFlags>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
-
-static inline SegmentFlags operator & (SegmentFlags lhs, SegmentFlags rhs)
-{
-	return static_cast<SegmentFlags>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
-}
-
-static inline bool operator * (SegmentFlags lhs, SegmentFlags rhs)
-{
-	return (static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs)) != 0;
-}
+ENUM_CLASS_OPERATORS(SegmentFlags)
 
 struct SegmentDescriptor
 {

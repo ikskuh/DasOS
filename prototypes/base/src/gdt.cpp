@@ -13,31 +13,23 @@ SegmentDescriptor & GDT::descriptor(uint32_t index)
 
 void GDT::initialize()
 {
-	//Ein Nulldeskriptor (gdt[0] = 0)
+	// Null descriptor
 	GDT::descriptor(0) = SegmentDescriptor();
-	
-	//Ein Codesegment für den Kernel (Present, Ring 0, Executable, 32 Bit; Basis 0, Limit 4 GiB)
 	GDT::descriptor(1) = SegmentDescriptor(
 		0x00000000,
 		0xFFFFFFFF, 
 		SegmentAccess::Present | SegmentAccess::Executable | SegmentAccess::Segment | SegmentAccess::Ring0, 
 		SegmentFlags::Use4KSize | SegmentFlags::Use32Bit);
-	
-	//Ein Datensegment für den Kernel (Present, Ring 0, Non-Executable, 32 Bit; Basis 0, Limit 4 GiB)
 	GDT::descriptor(2) = SegmentDescriptor(
 		0x00000000,
 		0xFFFFFFFF, 
 		SegmentAccess::Present | SegmentAccess::Writeable | SegmentAccess::Segment | SegmentAccess::Ring0, 
 		SegmentFlags::Use4KSize | SegmentFlags::Use32Bit);
-	
-	//Ein Codesegment für den Userspace (Present, Ring 3, Executable, 32 Bit; Basis 0, Limit 4 GiB)
 	GDT::descriptor(3) = SegmentDescriptor(
 		0x00000000,
 		0xFFFFFFFF, 
 		SegmentAccess::Present | SegmentAccess::Executable | SegmentAccess::Segment | SegmentAccess::Ring3, 
 		SegmentFlags::Use4KSize | SegmentFlags::Use32Bit);
-	
-	//Ein Datensegment für den Userspace (Present, Ring 3, Non-Executable, 32 Bit; Basis 0, Limit 4 GiB)
 	GDT::descriptor(4) = SegmentDescriptor(
 		0x00000000,
 		0xFFFFFFFF, 

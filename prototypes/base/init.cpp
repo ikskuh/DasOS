@@ -6,6 +6,7 @@
 #include "pointer.hpp"
 #include "multiboot.hpp"
 #include "gdt.hpp"
+#include "idt.hpp"
 #include "compat.h"
 
 using namespace multiboot;
@@ -80,6 +81,11 @@ extern "C" void init(Structure const & data)
     << (freeMemory >>  0) << "B, "
     << (freeMemory >> 12) << "Pages\n";
   
+	IDT::initialize();
+
+	asm volatile("int $0x00");
+	// asm volatile("cli");
+	
   /*
   for(int i = 0; i < 10; i++) {
     bool success;
