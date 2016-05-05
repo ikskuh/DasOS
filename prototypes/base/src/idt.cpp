@@ -41,6 +41,25 @@ void IDT::initialize()
 
 void IDT::dispatch(CpuState *cpu)
 {
-	Console::main << "Ermahgerd, Interrupts!";
+	using namespace console_tools;
+
+	Console::main << "Ermahgerd, Interrupts!\n";
+	
+	Console::main 
+		<< "eax    = " << hex(cpu->eax) << "\n"
+		<< "ebx    = " << hex(cpu->ebx) << "\n"
+		<< "ecx    = " << hex(cpu->ecx) << "\n"
+		<< "edx    = " << hex(cpu->edx) << "\n"
+		<< "esi    = " << hex(cpu->esi) << "\n"
+		<< "edi    = " << hex(cpu->edi) << "\n"
+		<< "ebp    = " << hex(cpu->ebp) << "\n"
+		<< "intr   = " << cpu->intr << "\n"
+		<< "error  = " << cpu->error << "\n"
+		<< "eip    = " << hex(cpu->eip) << "\n"
+		<< "cs     = " << hex(cpu->cs) << "\n"
+		<< "eflags = " << bin(cpu->eflags) << "\n"
+		<< "esp    = " << hex(cpu->esp) << "\n"
+		<< "ss     = " << hex(cpu->ss) << "\n";
+	
 	while(true);
 }
