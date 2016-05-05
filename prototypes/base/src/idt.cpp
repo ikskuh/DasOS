@@ -1,6 +1,7 @@
 #include "idt.hpp"
 #include "io.hpp"
 #include "console.hpp"
+#include "pic.hpp"
 
 #define ISR(num) extern "C" void isr_##num();
 #define ISR_ERR(num) ISR(num)
@@ -44,20 +45,11 @@ void IDT::initialize()
 
 void IDT::setupPIC()
 {
-	outb(0x20, 0x11);
-	outb(0x21, 0x20);
-	outb(0x21, 0x04);
-	outb(0x21, 0x01);
+	masterPIC.initialize(0x20, 0x04, 0x01);
+	slavePIC.initialize(0x28, 0x02, 0x01);
 
-	// Slave-PIC
-	outb(0xa0, 0x11);
-	outb(0xa1, 0x28);
-	outb(0xa1, 0x02);
-	outb(0xa1, 0x01);
-
-	// Demask all interrupts
-	outb(0x20, 0x0);
-	outb(0xa0, 0x0);
+	masterPIC.maskInterrupts(0x00);
+	slavePIC.maskInterrupts(0x00);
 }
 
 void IDT::dispatch(CpuState *cpu)
