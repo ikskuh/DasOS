@@ -4,7 +4,9 @@ CC=gcc
 CXX=g++
 LD=ld
 
-FLAGS = -ffreestanding -m32 -Werror -Wall -iquote include -O3
+IDT_DISPATCH = _ZN3IDT8dispatchEP8CpuState
+
+FLAGS = -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -O3 
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin

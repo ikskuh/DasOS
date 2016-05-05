@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include "enums.hpp"
+#include "cpustate.hpp"
 
 enum class InterruptFlags : uint8_t
 {
@@ -62,6 +63,8 @@ public:
 private:
 	static InterruptDescriptor descriptors[length];
 	IDT() = delete;
+	
+	static void dispatch(CpuState *cpu);
 public:
 
 	static InterruptDescriptor & descriptor(uint32_t idx);
