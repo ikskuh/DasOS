@@ -5,6 +5,7 @@
 #include "numeric.hpp"
 #include "pointer.hpp"
 #include "multiboot.hpp"
+#include "gdt.hpp"
 #include "compat.h"
 
 using namespace multiboot;
@@ -24,6 +25,8 @@ extern "C" void init(Structure const & data)
 		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
 		<< "Hello default color.\n";
   
+	GDT::initialize();
+	
   Console::main
     << "bootloader name:  " << data.bootLoaderName << "\n"
     << "command line:     " << data.commandline << "\n"
