@@ -10,6 +10,7 @@
 #include "compat.h"
 #include "io.hpp"
 
+#include "driver/timer.hpp"
 #include "driver/keyboard.hpp"
 #include "driver/scheduler.hpp"
 
@@ -22,13 +23,9 @@ struct dummy;
 extern dummy kernelStartMarker;
 extern dummy kernelEndMarker;
 
+driver::Timer timer;
 driver::Keyboard keyboardDriver;
 driver::Scheduler scheduler;
-
-void timer(CpuState *cpu)
-{
-	// Console::main << "tick! ";
-}
 
 extern "C" void init(Structure const & data)
 {
@@ -95,8 +92,7 @@ extern "C" void init(Structure const & data)
 
 	IDT::initialize();
 	
-	IDT::interrupt(0x20) = Interrupt(timer);
-	
+	timer.install();
 	keyboardDriver.install();
 	scheduler.install();
 	

@@ -1,18 +1,20 @@
 #pragma once
 
+#include <inttypes.h>
 #include "driver.hpp"
-#include "cpustate.hpp"
 
 namespace driver
 {
-	class Keyboard : 
+	class Timer : 
 		public Driver
 	{
-	private:
-		static void dispatchIRQ(CpuState *cpu);
 	public:
-		Keyboard();
-	
+		Timer();
+		
 		void install() override;
+		
+		void reset();
+		
+		uint32_t count();
 	};
 }
