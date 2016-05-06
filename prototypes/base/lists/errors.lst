@@ -1,0 +1,5 @@
+ERROR(0, Success,                Nothing went wrong. This should never encounter.)
+ERROR(1, OutOfMemory,            The system has run out of memory.)
+ERROR(2, UnhandledException,     An unhandled exception has occurred.)
+ERROR(3, UnhandledInterrupt,     An unhandled interrupt has occurred.)
+ERROR(4, DriverAlreadyInstalled, A driver was already installed.)

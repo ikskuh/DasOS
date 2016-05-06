@@ -38,7 +38,13 @@ void BSOD::die(Error code, const char *msg, CpuState *cpu)
 	Console::main << FColor(Color::White) << BColor(Color::Red);
 	Console::main.clear();
 	Console::main
-		<< "OH MY GOD. DasOS crashed! But i can tell you: \n"
+		<< "OH MY GOD. DasOS crashed! But i can tell you: \n";
+	switch(code) {
+	#define ERROR(num, ident, desc) case Error::ident: Console::main << #desc << "\n"; break;
+#include "errors.lst"
+#undef ERROR
+	}
+	Console::main
 		<< msg << "\n"
 		<< "Also here is some CPU information:\n";
 		

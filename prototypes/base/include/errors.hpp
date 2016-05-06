@@ -2,9 +2,7 @@
 
 enum class Error
 {
-  Success = 0,
-  OutOfMemory = 1,
-  UnhandledException = 2,
-	UnhandledInterrupt = 3,
-	DriverAlreadyInstalled = 4,
+#define ERROR(num, ident, desc) ident = num,
+#include "errors.lst"
+#undef ERROR
 };
