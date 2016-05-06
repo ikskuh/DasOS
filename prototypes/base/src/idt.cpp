@@ -72,25 +72,14 @@ void IDT::dispatch(CpuState *cpu)
 		BSOD::die(Error::UnhandledException, "Unhandled Interrupt!", cpu);
 	}
 
-	if(cpu->interrupt <= 0x1F) {
-		// Exception Handling
-		
-	} else if (cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F) {
-	
-		// IRQ
-		// Console::main << "[IRQ " << (cpu->interrupt - 0x20) << "]";
-		
-		
-	
+	// ACK interrupts
+	if (cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F) {
 		if(cpu->interrupt >= 0x28) {
 			slavePIC.sendEndOfInterrupt();
 		}
 		masterPIC.sendEndOfInterrupt();
-	} else {
-		BSOD::die(Error::UnhandledInterrupt, "Ermahgerd, Interrupts!", cpu);
 	}
 }
-
 
 
 
