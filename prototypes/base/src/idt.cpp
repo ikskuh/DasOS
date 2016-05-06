@@ -9,15 +9,26 @@
 #undef ISR
 #undef ISR_ERR
 
-static InterruptDescriptor invalid;
+static InterruptDescriptor invalidDesc;
+static Interrupt invalidIntr;
+
 InterruptDescriptor IDT::descriptors[length];
+Interrupt IDT::interrupts[length];
 
 InterruptDescriptor & IDT::descriptor(uint32_t idx)
 {
 	if(idx >= IDT::length) {
-		return invalid;
+		return invalidDesc;
 	}
 	return IDT::descriptors[idx];
+}
+
+Interrupt & IDT::interrupt(uint32_t index)
+{
+	if(index >= IDT::length) {
+		return invalidIntr;
+	}
+	return IDT::interrupts[index];
 }
 
 void IDT::initialize()
@@ -54,13 +65,22 @@ void IDT::setupPIC()
 
 void IDT::dispatch(CpuState *cpu)
 {
+	Interrupt &intr = IDT::interrupts[cpu->interrupt];
+	if(intr.isEnabled) {
+		(*intr.handler)(cpu);
+	} else {
+		BSOD::die(Error::UnhandledException, "Unhandled Interrupt!", cpu);
+	}
+
 	if(cpu->interrupt <= 0x1F) {
 		// Exception Handling
-		BSOD::die(Error::UnhandledException, "Ermahgerd, Exceptions!", cpu);
+		
 	} else if (cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F) {
 	
 		// IRQ
 		// Console::main << "[IRQ " << (cpu->interrupt - 0x20) << "]";
+		
+		
 	
 		if(cpu->interrupt >= 0x28) {
 			slavePIC.sendEndOfInterrupt();
@@ -69,4 +89,47 @@ void IDT::dispatch(CpuState *cpu)
 	} else {
 		BSOD::die(Error::UnhandledInterrupt, "Ermahgerd, Interrupts!", cpu);
 	}
+}
+
+
+
+
+Interrupt::Interrupt() :
+	isEnabled(false), 
+	handler(nullptr)
+{
+
+}
+	
+Interrupt::Interrupt(Handler handler) : 
+	isEnabled(true), 
+	handler(handler)
+{
+	
+}
+
+
+
+
+InterruptDescriptor::InterruptDescriptor() : 
+	offset0(0), selector(0), zero(0), flags(InterruptFlags::None), offset1(0)
+{
+
+}
+	
+InterruptDescriptor::InterruptDescriptor(uint32_t offset, uint32_t selector, InterruptFlags flags) : 
+	offset0(0), selector(selector), zero(0), flags(flags), offset1(0)
+{
+	this->setOffset(offset);
+}
+	
+uint32_t InterruptDescriptor::offset() const
+{
+	return this->offset0 | (this->offset1 << 16);
+}
+
+void InterruptDescriptor::setOffset(uint32_t offset)
+{
+	this->offset0 = (offset & 0x0000FFFF) >> 0;
+	this->offset1 = (offset & 0xFFFF0000) >> 16;
 }

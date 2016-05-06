@@ -28,38 +28,44 @@ struct InterruptDescriptor
 	InterruptFlags flags;
 	uint16_t offset1;
 	
-	InterruptDescriptor() : 
-		offset0(0), selector(0), zero(0), flags(InterruptFlags::None), offset1(0)
-	{
+	InterruptDescriptor();
 	
-	}
+	InterruptDescriptor(uint32_t offset, uint32_t selector, InterruptFlags flags);
 	
-	InterruptDescriptor(uint32_t offset, uint32_t selector, InterruptFlags flags) : 
-		offset0(0), selector(selector), zero(0), flags(flags), offset1(0)
-	{
-		this->setOffset(offset);
-	}
+	uint32_t offset() const;
 	
-	uint32_t offset() const
-	{
-		return this->offset0 | (this->offset1 << 16);
-	}
-	
-	void setOffset(uint32_t offset)
-	{
-		this->offset0 = (offset & 0x0000FFFF) >> 0;
-		this->offset1 = (offset & 0xFFFF0000) >> 16;
-	}
-	
+	void setOffset(uint32_t offset);
 } __attribute__((packed));
 
 static_assert(sizeof(InterruptDescriptor) == 8, "InterruptDescriptor must be 8 byte large.");
+
+/**
+ * An interrupt that specifies
+ * a handler and if the interrupt is
+ * enabled. Any non-enabled interrupt
+ * causes a BSOD.
+ */
+class Interrupt
+{
+	friend class IDT;
+	using Handler = void (*)(CpuState *cpu);
+private:
+	bool isEnabled;
+	Handler handler;
+	
+public:
+	Interrupt();
+	explicit Interrupt(Handler handler);
+};
 
 
 class IDT
 {
 public:
 	static const uint32_t length = 256;
+	
+	static Interrupt interrupts[length];
+	
 private:
 	static InterruptDescriptor descriptors[length];
 	IDT() = delete;
@@ -68,8 +74,19 @@ private:
 	static void setupPIC();
 public:
 
+	/**
+	 * Accessor to an interrupt handler.
+	 */
+	static Interrupt & interrupt(uint32_t index);
+
+	/** 
+	 * Gets an interrupt descriptor
+	 */
 	static InterruptDescriptor & descriptor(uint32_t idx);
 
+	/**
+	 * Initializes the interrupt table and sets up the PIC.
+	 */
 	static void initialize();
 	
 };

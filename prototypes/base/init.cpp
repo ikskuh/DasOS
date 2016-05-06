@@ -19,6 +19,11 @@ struct dummy;
 extern dummy kernelStartMarker;
 extern dummy kernelEndMarker;
 
+void timer(CpuState *cpu)
+{
+	Console::main << "tick! ";
+}
+
 extern "C" void init(Structure const & data)
 {
 	Console::main
@@ -83,6 +88,8 @@ extern "C" void init(Structure const & data)
     << (freeMemory >> 12) << "Pages\n";
 
 	IDT::initialize();
+	
+	IDT::interrupt(0x20) = Interrupt(timer);
 
 	Console::main << "Interrupts set up.\n";
 	
