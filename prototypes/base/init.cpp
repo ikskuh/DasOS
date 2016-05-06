@@ -10,6 +10,8 @@
 #include "compat.h"
 #include "io.hpp"
 
+#include "driver/keyboard.hpp"
+
 using namespace multiboot;
 using namespace console_tools;
 
@@ -19,9 +21,11 @@ struct dummy;
 extern dummy kernelStartMarker;
 extern dummy kernelEndMarker;
 
+driver::Keyboard keyboardDriver;
+
 void timer(CpuState *cpu)
 {
-	Console::main << "tick! ";
+	// Console::main << "tick! ";
 }
 
 extern "C" void init(Structure const & data)
@@ -90,7 +94,8 @@ extern "C" void init(Structure const & data)
 	IDT::initialize();
 	
 	IDT::interrupt(0x20) = Interrupt(timer);
-
+	keyboardDriver.install();
+	
 	Console::main << "Interrupts set up.\n";
 	
 	asm volatile("sti");
