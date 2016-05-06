@@ -1,5 +1,26 @@
 #include "bsod.hpp"
 #include "console.hpp"
+#include "exceptions.hpp"
+
+static const char *toString(int interrupt)
+{
+	if(interrupt <= 0x1f) {
+		switch(interrupt) {
+#define EXCEPTION(num, shorthand, ident, desc, type) case num: return #desc;
+#include "exceptions.lst"
+#undef EXCEPTION
+			default: return "Unknown Exception";
+		}
+	}
+	if(interrupt >= 0x20 && interrupt <= 0x2F) {
+		switch(interrupt - 0x20) {
+#define IRQ(num, ident, desc) case num: return #desc;
+#include "irqs.lst"
+#undef IRQ
+		}
+	}
+	return "Unknown Interrupt";
+};
 
 void BSOD::die(Error code, const char *msg)
 {
@@ -29,7 +50,7 @@ void BSOD::die(Error code, const char *msg, CpuState *cpu)
 			<< "esi    = " << hex(cpu->esi) << "\n"
 			<< "edi    = " << hex(cpu->edi) << "\n"
 			<< "ebp    = " << hex(cpu->ebp) << "\n"
-			<< "intr   = " << cpu->interrupt << "\n"
+			<< "intr   = " << cpu->interrupt << "(" << toString(cpu->interrupt) << ")" << "\n"
 			<< "error  = " << cpu->error << "\n"
 			<< "eip    = " << hex(cpu->eip) << "\n"
 			<< "cs     = " << hex(cpu->cs) << "\n"

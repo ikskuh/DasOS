@@ -16,7 +16,7 @@ isr_\nr:
 
 #define ISR(num) isr_stub num
 #define ISR_ERR(num) isr_stub_with_err num
-#include "interrupt-list.inc"
+#include "interrupts.lst"
 #undef ISR
 #undef ISR_ERR
 

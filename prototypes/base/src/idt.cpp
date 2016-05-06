@@ -5,7 +5,7 @@
 
 #define ISR(num) extern "C" void isr_##num();
 #define ISR_ERR(num) ISR(num)
-#include "../interrupt-list.inc"
+#include "interrupts.lst"
 #undef ISR
 #undef ISR_ERR
 
@@ -38,7 +38,7 @@ void IDT::initialize()
 		0x08, \
 		InterruptFlags::Interrupt | InterruptFlags::Use32Bit | InterruptFlags::Ring0 | InterruptFlags::Present);
 #define ISR_ERR(num) ISR(num)
-#include "../interrupt-list.inc"
+#include "interrupts.lst"
 #undef ISR
 #undef ISR_ERR
 
