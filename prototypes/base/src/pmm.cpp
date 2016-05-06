@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 #include "pmm.hpp"
+#include "bsod.hpp"
 
 /**
  * Number stored of pages in the bitmap
@@ -53,7 +54,7 @@ void PMM::markUsed(physical_t page)
   bitmap[idx] &= ~(1<<bit);
 }
 
-physical_t PMM::alloc(bool &success)
+physical_t PMM::alloc()
 {
   for(uint32_t idx = 0; idx < BitmapLength; idx++) {
     // fast skip when no bit is set
@@ -73,14 +74,11 @@ physical_t PMM::alloc(bool &success)
       uint32_t pageId = 32 * idx + bit;
       uint32_t ptr = 4096 * pageId;
       
-      success = true;
-      
       return physical_t(ptr);
     }
   }
-  // Do something here!
-  success = false;
-  return physical_t::invalid;
+  BSOD::die(Error::OutOfMemory, "Out of physical memory!");
+	return physical_t::invalid;
 }
 
 void PMM::free(physical_t page)

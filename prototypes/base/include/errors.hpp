@@ -6,4 +6,5 @@ enum class Error
   OutOfMemory = 1,
   UnhandledException = 2,
 	UnhandledInterrupt = 3,
+	DriverAlreadyInstalled = 4,
 };

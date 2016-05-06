@@ -22,9 +22,9 @@ public:
 
   /**
    * Allocates a single page.
-   * @param success This boolean will contain true if the allocation was successful.
+   * @remarks This method will either return a valid value or die with a BSOD if out of memory.
    */
-  static physical_t alloc(bool &success);
+  static physical_t alloc();
 
   /**
    * Frees a given page by pointer.

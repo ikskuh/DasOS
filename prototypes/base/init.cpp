@@ -11,6 +11,7 @@
 #include "io.hpp"
 
 #include "driver/keyboard.hpp"
+#include "driver/scheduler.hpp"
 
 using namespace multiboot;
 using namespace console_tools;
@@ -22,6 +23,7 @@ extern dummy kernelStartMarker;
 extern dummy kernelEndMarker;
 
 driver::Keyboard keyboardDriver;
+driver::Scheduler scheduler;
 
 void timer(CpuState *cpu)
 {
@@ -94,7 +96,9 @@ extern "C" void init(Structure const & data)
 	IDT::initialize();
 	
 	IDT::interrupt(0x20) = Interrupt(timer);
+	
 	keyboardDriver.install();
+	scheduler.install();
 	
 	Console::main << "Interrupts set up.\n";
 	

@@ -72,7 +72,7 @@ public:
    * Allow explicit conversion to a raw pointer.
    */
   explicit operator void * () const {
-    return this->ptr;
+    return this->data();
   }
   
   /**
