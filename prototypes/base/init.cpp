@@ -100,7 +100,7 @@ extern "C" void init(Structure const & data)
 	
 	asm volatile("sti");
 	
-	// asm volatile ("int $0x00");
+	asm volatile ("int $0x00");
 	
 	// Console::main << "Interrupts enabled.\n";
 	

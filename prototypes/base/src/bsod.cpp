@@ -33,36 +33,42 @@ void BSOD::die(Error code, const char *msg)
 void BSOD::die(Error code, const char *msg, CpuState *cpu)
 {
 	using namespace console_tools;
+	FColor Y(Color::Yellow);
+	FColor W(Color::White);
+	
 	asm volatile ("cli");
 	
 	Console::main << FColor(Color::White) << BColor(Color::Red);
 	Console::main.clear();
+	
 	Console::main
-		<< "OH MY GOD. DasOS crashed! But i can tell you: \n";
+		<< "                                ___  __  __  ___ " << "\n"
+		<< "                               / _ \\|  \\/  |/ __|" << "\n"
+		<< "                              | (_) | |\\/| | (_ |" << "\n"
+		<< "                               \\___/|_|  |_|\\___|" << "\n"
+		<< "\n";
+	
+	Console::main
+		<< "DasOS crashed!\n"
+		<< "\n"
+		<< "CODE: " << Y;
 	switch(code) {
-	#define ERROR(num, ident, desc) case Error::ident: Console::main << #desc << "\n"; break;
+	#define ERROR(num, ident, desc) case Error::ident: Console::main << #ident << " / " << #desc << "\n"; break;
 #include "errors.lst"
 #undef ERROR
 	}
 	Console::main
-		<< msg << "\n"
-		<< "Also here is some CPU information:\n";
+		<< W << "MSG:  " << Y
+		<< msg << W << "\n"
+		<< "\n"
+		<< "CPU State:\n";
+		
 		
 	Console::main 
-			<< "eax    = " << hex(cpu->eax) << "\n"
-			<< "ebx    = " << hex(cpu->ebx) << "\n"
-			<< "ecx    = " << hex(cpu->ecx) << "\n"
-			<< "edx    = " << hex(cpu->edx) << "\n"
-			<< "esi    = " << hex(cpu->esi) << "\n"
-			<< "edi    = " << hex(cpu->edi) << "\n"
-			<< "ebp    = " << hex(cpu->ebp) << "\n"
-			<< "intr   = " << cpu->interrupt << "(" << toString(cpu->interrupt) << ")" << "\n"
-			<< "error  = " << cpu->error << "\n"
-			<< "eip    = " << hex(cpu->eip) << "\n"
-			<< "cs     = " << hex(cpu->cs) << "\n"
-			<< "eflags = " << bin(cpu->eflags) << "\n"
-			<< "esp    = " << hex(cpu->esp) << "\n"
-			<< "ss     = " << hex(cpu->ss) << "\n";
+			<< W << "eax = " << Y << pad(hex(cpu->eax), 10)  << W << " esi = " << Y << pad(hex(cpu->esi), 10) << W << " edx = " << Y << pad(hex(cpu->edx), 10) << W << " esp = " << Y << pad(hex(cpu->esp), 10) << "\n"
+			<< W << "ebx = " << Y << pad(hex(cpu->ebx), 10)  << W << " edi = " << Y << pad(hex(cpu->edi), 10) << W << " eip = " << Y << pad(hex(cpu->eip), 10) << W << " flg = " << Y << bin(cpu->eflags) << "\n"
+			<< W << "ecx = " << Y << pad(hex(cpu->ecx), 10)  << W << " ebp = " << Y << pad(hex(cpu->ebp), 10) << W << " cs  = " << Y << pad(hex(cpu->cs), 10)  << W << " ss  = " << Y << pad(hex(cpu->ss), 10)  << "\n"
+			<< W << "int = " << Y << pad(cpu->interrupt, 10) << W << " err = " << Y << pad(cpu->error, 10)    << W << " " << toString(cpu->interrupt);
 	
 	asm volatile ("hlt");
 	while(true);

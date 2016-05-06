@@ -22,7 +22,17 @@ struct NumericFormat
 {
   T value;
   uint32_t base;
+	
+	/**
+	 * Applies a padding to the number.
+	 * A positive number will apply padding the right side,
+	 * a negative number will pad the left side.
+	 */
+	int32_t padding = 0;
+	
+	char padchar = ' ';
 
+  NumericFormat(T value) : value(value), base(10) { }
   NumericFormat(T value, uint32_t base) : value(value), base(base) { }
 };
 
@@ -42,6 +52,17 @@ namespace console_tools
   
   template<typename T>
   auto nbase(T value, uint32_t base) { return NumericFormat<T>(value, base); }
+	
+	template<typename T>
+	auto pad(NumericFormat<T> value, int32_t padding, char c = ' ') { 
+		value.padding = padding;
+		return value;
+	}
+	
+	template<typename T>
+	auto pad(T value, int32_t padding, char c = ' ') { 
+		return pad(NumericFormat<T>(value), padding, c);
+	}
 }
 
 class Console
@@ -62,8 +83,14 @@ private:
 	
 	/**
 	 * Prints the prefix for a given numeric base.
+	 * @returns the prefix length.
 	 */
-	void printNumericPrefix(uint32_t base);
+	uint32_t printNumericPrefix(uint32_t base);
+	
+	/**
+	 * Prints a character several times.
+	 */
+	void putrep(char c, uint32_t repetitions);
 public:
 	Console(Screen *screen);
   

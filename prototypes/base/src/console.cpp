@@ -164,63 +164,62 @@ Console & Console::operator << <virtual_t_ident>(virtual_t ptr)
   return *this;
 }
 
+#define NUMERIC_FMT_HANDLER char buffer[13]; \
+	size_t prefixlen = this->printNumericPrefix(fmt.base); \
+  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base); \
+	int delta = prefixlen + len; \
+	if(fmt.padding < 0 && delta < -fmt.padding) { \
+		this->putrep(fmt.padchar, -fmt.padding - delta); \
+	} \
+  for(size_t i = 0; i < len; i++) { \
+    this->put(buffer[i]); \
+  } \
+	if(fmt.padding > 0 && delta < fmt.padding) { \
+		this->putrep(fmt.padchar, fmt.padding - delta); \
+	} \
+  return *this
+
 template<>
 Console & Console::operator << <uint32_t>(const NumericFormat<uint32_t> & fmt)
 {
-  char buffer[13];
-	this->printNumericPrefix(fmt.base);
-  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
-  for(size_t i = 0; i < len; i++) {
-    this->put(buffer[i]);
-  }
-  return *this;
+  NUMERIC_FMT_HANDLER;
 }
 
 template<>
 Console & Console::operator << <int32_t>(const NumericFormat<int32_t> & fmt)
 {
-  char buffer[13];
-	this->printNumericPrefix(fmt.base);
-  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
-  for(size_t i = 0; i < len; i++) {
-    this->put(buffer[i]);
-  }
-  return *this;
+  NUMERIC_FMT_HANDLER;
 }
 
 template<>
 Console & Console::operator << <uint64_t>(const NumericFormat<uint64_t> & fmt)
 {
-  char buffer[13];
-	this->printNumericPrefix(fmt.base);
-  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
-  for(size_t i = 0; i < len; i++) {
-    this->put(buffer[i]);
-  }
-  return *this;
+  NUMERIC_FMT_HANDLER;
 }
 
 template<>
 Console & Console::operator << <int64_t>(const NumericFormat<int64_t> & fmt)
 {
-  char buffer[13];
-	this->printNumericPrefix(fmt.base);
-  size_t len = Numeric::toString(buffer, sizeof(buffer), fmt.value, fmt.base);
-  for(size_t i = 0; i < len; i++) {
-    this->put(buffer[i]);
-  }
-  return *this;
+  NUMERIC_FMT_HANDLER;
 }
 
-void Console::printNumericPrefix(uint32_t base)
+uint32_t Console::printNumericPrefix(uint32_t base)
 {
 	switch(base) {
-		case 2: *this << "0b"; break;
-		case 8: *this << "0o"; break;
-		case 10: return;
-		case 16: *this << "0x"; break;
+		case 2: *this << "0b"; return 2;
+		case 8: *this << "0o"; return 2;
+		case 10: return 0;
+		case 16: *this << "0x"; return 2;
 		default:
 			*this << "[" << base << "]x";
-			break;
+			if(base < 10) return 4;
+			if(base < 100) return 5;
+			return 6;
 	}
+}
+
+void Console::putrep(char c, uint32_t repetitions)
+{
+	for(uint32_t i = 0; i < repetitions; i++)
+		this->put(c);
 }
