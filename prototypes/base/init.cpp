@@ -36,7 +36,7 @@ void run_program0(Module const & module)
 	for(uint32_t ptr = 0; ptr < module.size(); ptr += 0x1000)
 	{
 		kernelContext->provide(
-			virtual_t(ptr),
+			virtual_t(0x40000000 + ptr),
 			VMMFlags::Writable | VMMFlags::UserSpace);
 	}
 	char * src = module.start.data<char>();
@@ -130,6 +130,10 @@ extern "C" void init(Structure const & data)
 			physical_t(addr),
 			VMMFlags::Writable | VMMFlags::UserSpace);
 	}
+	kernelContext->map(
+		virtual_t(kernelContext),
+		physical_t(kernelContext),
+		VMMFlags::Writable);
 	Console::main << "Active Context...\n";
 	VMM::activate(*kernelContext);
 	
