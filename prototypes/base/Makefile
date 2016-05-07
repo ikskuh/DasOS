@@ -6,7 +6,7 @@ LD=ld
 
 IDT_DISPATCH = _ZN3IDT8dispatchEP8CpuState
 
-FLAGS = -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists -O3 -g
+FLAGS = -mno-sse -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists -O3 -g
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
@@ -47,7 +47,13 @@ kernel-base.ker: $(OBJS)
 
 
 run:
-	qemu-system-i386 -kernel kernel-base.ker -m 64
+	qemu-system-i386 \
+		-kernel kernel-base.ker \
+		-m 64 \
+		-d cpu_reset,int \
+		-no-reboot \
+		-no-shutdown \
+		-serial stdio
 
 bnr: kernel-base.ker run
 

@@ -9,6 +9,7 @@
 #include "idt.hpp"
 #include "compat.h"
 #include "io.hpp"
+#include "vmm.hpp"
 
 #include "driver/timer.hpp"
 #include "driver/keyboard.hpp"
@@ -81,6 +82,8 @@ extern "C" void init(Structure const & data)
     PMM::markUsed(physical_t(ptr));
     ptr += 0x1000;
   }
+	// nullptr is not valid.
+	PMM::markUsed(physical_t(nullptr));
   
   auto freeMemory = PMM::getFreeMemory();
   Console::main
@@ -91,27 +94,43 @@ extern "C" void init(Structure const & data)
     << (freeMemory >> 12) << "Pages\n";
 
 	IDT::initialize();
+	Console::main << "Interrupts set up.\n";
+	
+	Console::main << "Creating VMM Context...\n";
+	VMMContext kernelContext;
+	
+	
+	Console::main << "Mapping memory...\n";
+	for(uint32_t addr = 0; addr < 4096 * 1024; addr += 0x1000) {
+		kernelContext.map(
+			virtual_t(addr), 
+			physical_t(addr),
+			VMMFlags::Writable | VMMFlags::UserSpace);
+	}
+	Console::main << "Active Context...\n";
+	VMM::activate(kernelContext);
+	
+	Console::main << "Active Paging...\n";
+	VMM::enable();
+	Console::main << "Virtual Memory Management ready.\n";
 	
 	timer.install();
 	keyboardDriver.install();
 	scheduler.install();
+	Console::main << "Drivers installed.\n";
 	
-	Console::main << "Interrupts set up.\n";
 	
 	asm volatile("sti");
 	
-	asm volatile ("int $0x00");
+	// asm volatile ("int $0x00");
 	
-	// Console::main << "Interrupts enabled.\n";
-	
-  /*
-  for(int i = 0; i < 10; i++) {
-    bool success;
-    physical_t page = PMM::alloc(success);
-    Console::main << "allocated page " << i << " [" << success << "]: " << page << "\n";
-  }
-  */
+	Console::main << "Interrupts enabled.\n";
   
+	uint32_t *invalidAddress = (uint32_t*)0xFF0000FF;
+	
+	Console::main <<
+		"Value at " << invalidAddress << " = " << (*invalidAddress) << "\n";
+	
   while(true);
 }
 
