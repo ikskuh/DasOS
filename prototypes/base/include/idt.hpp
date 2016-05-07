@@ -48,7 +48,7 @@ static_assert(sizeof(InterruptDescriptor) == 8, "InterruptDescriptor must be 8 b
 class Interrupt
 {
 	friend class IDT;
-	using Handler = void (*)(CpuState *cpu);
+	using Handler = void (*)(CpuState * & cpu);
 private:
 	bool isEnabled;
 	Handler handler;
@@ -70,7 +70,7 @@ private:
 	static InterruptDescriptor descriptors[length];
 	IDT() = delete;
 	
-	static void dispatch(CpuState *cpu);
+	static CpuState * dispatch(CpuState *cpu);
 	static void setupPIC();
 public:
 

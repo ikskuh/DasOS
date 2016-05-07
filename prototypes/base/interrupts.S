@@ -39,7 +39,9 @@ isr_handler:
 	// Calls interrupt handler with CPU state as argument
 	push %esp
 	call IDT_DISPATCH
-	add $4, %esp
+	// add $4, %esp
+	mov %eax, %esp
+
 
 	// Restore CPU State
 	pop %eax

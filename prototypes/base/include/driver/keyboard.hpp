@@ -9,7 +9,7 @@ namespace driver
 		public Driver
 	{
 	private:
-		static void dispatchIRQ(CpuState *cpu);
+		static void dispatchIRQ(CpuState *&cpu);
 	public:
 		Keyboard();
 	

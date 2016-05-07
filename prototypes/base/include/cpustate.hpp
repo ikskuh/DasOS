@@ -20,6 +20,6 @@ struct CpuState
 	uint32_t   eflags;
 	uint32_t   esp;
 	uint32_t   ss;
-};
+} __attribute__((packed));
 
 static_assert(sizeof(CpuState) == 56, "CpuState must be 56 bytes large.");

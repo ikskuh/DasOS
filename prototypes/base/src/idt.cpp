@@ -63,8 +63,10 @@ void IDT::setupPIC()
 	slavePIC.maskInterrupts(0x00);
 }
 
-void IDT::dispatch(CpuState *cpu)
+CpuState * IDT::dispatch(CpuState *cpu)
 {
+	bool ackMaster = cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F;
+	bool ackSlave = cpu->interrupt >= 0x28;
 	Interrupt &intr = IDT::interrupts[cpu->interrupt];
 	if(intr.isEnabled) {
 		(*intr.handler)(cpu);
@@ -73,12 +75,13 @@ void IDT::dispatch(CpuState *cpu)
 	}
 
 	// ACK interrupts
-	if (cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2F) {
-		if(cpu->interrupt >= 0x28) {
+	if (ackMaster) {
+		if(ackSlave) {
 			slavePIC.sendEndOfInterrupt();
 		}
 		masterPIC.sendEndOfInterrupt();
 	}
+	return cpu;
 }
 
 

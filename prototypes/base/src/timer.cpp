@@ -12,7 +12,7 @@ namespace driver
 
 	void Timer::install()
 	{
-		IDT::interrupt(0x20) = Interrupt([](auto *) { counter++; });
+		IDT::interrupt(0x20) = Interrupt([](auto *&) { counter++; });
 	}
 	
 	void Timer::reset()

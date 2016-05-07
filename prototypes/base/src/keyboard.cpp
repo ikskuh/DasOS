@@ -14,7 +14,7 @@ namespace driver
 		IDT::interrupt(0x21) = Interrupt(Keyboard::dispatchIRQ);
 	}
 	
-	void Keyboard::dispatchIRQ(CpuState *cpu)
+	void Keyboard::dispatchIRQ(CpuState *&cpu)
 	{
 		Console::main << "keyboard! ";
 	}
