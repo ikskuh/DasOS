@@ -8,6 +8,8 @@
 #include "compat.h"
 #include "io.hpp"
 #include "vmm.hpp"
+#include "elf.hpp"
+#include "bsod.hpp"
 
 #include "driver/timer.hpp"
 #include "driver/keyboard.hpp"
@@ -15,6 +17,8 @@
 
 #include <inttypes.h>
 #include <new>
+
+#include <string.h>
 
 using namespace multiboot;
 using namespace console_tools;
@@ -31,24 +35,74 @@ driver::Scheduler scheduler;
 
 VMMContext *kernelContext;
 
+static const uint32_t entryPointAddress = 0x40000000;
+
 void run_program0(Module const & module)
 {
-	for(uint32_t ptr = 0; ptr < module.size(); ptr += 0x1000)
-	{
-		kernelContext->provide(
-			virtual_t(0x40000000 + ptr),
-			VMMFlags::Writable | VMMFlags::UserSpace);
+	using namespace elf;
+	
+	const Header *header = module.start.data<elf::Header>();
+	
+	ProgramHeader *ph;
+	int i;
+	if (header->magic != MAGIC) {
+		BSOD::die(Error::InvalidELFImage, "Keine gueltige ELF-Magic!\n");
+		return;
 	}
-	char * src = module.start.data<char>();
-	char * dst = (char*)0x40000000;
-	for(uint32_t ptr = 0; ptr < module.size(); ptr++)
-	{
-		dst[ptr] = src[ptr];
+
+	ph = (ProgramHeader*)(((char*) header) + header->ph_offset);
+	for (i = 0; i < header->ph_entry_count; i++, ph++) {
+		void* dest = (void*) ph->virt_addr;
+		void* src = ((char*) header) + ph->offset;
+
+		/* Nur Program Header vom Typ LOAD laden */
+		if (ph->type != 1) {
+			continue;
+		}
+		
+		if(ph->virt_addr < entryPointAddress) {
+			BSOD::die(Error::InvalidELFImage, "A LOAD section tried to sneak into the kernel!");
+		}
+
+		for(uint32_t i = 0; i < ph->mem_size; i += 0x1000) {
+			kernelContext->provide(
+				virtual_t(ph->virt_addr + i),
+				VMMFlags::Writable | VMMFlags::UserSpace);
+		}
+		
+		memset(dest, 0, ph->mem_size);
+		memcpy(dest, src, ph->file_size);
 	}
 	
 	using EntryPoint = void (*)();
-	EntryPoint ep = (EntryPoint)0x40000000;
+	EntryPoint ep = (EntryPoint)entryPointAddress;
 	ep();
+}
+
+static void dump_elf(elf::Header *header)
+{
+	using namespace elf;
+	ProgramHeader *ph;
+	int i;
+
+	/* Ist es ueberhaupt eine ELF-Datei? */
+	if (header->magic != MAGIC) {
+		BSOD::die(Error::InvalidELFImage, "Keine gueltige ELF-Magic!\n");
+		return;
+	}
+	ph = (ProgramHeader*)(((char*) header) + header->ph_offset);
+	for (i = 0; i < header->ph_entry_count; i++, ph++) {
+		void* dest = (void*) ph->virt_addr;
+		void* src = ((char*) header) + ph->offset;
+
+		Console::main
+			<< "Header: "   << ph->type << ", "
+			<< "Source: "   << src  << ", "
+			<< "Dest: "     << dest << ", "
+			<< "Memsize: "  << ph->mem_size << ", "
+			<< "Filesize: " << ph->file_size 
+			<< "\n";
+	}
 }
 
 extern "C" void init(Structure const & data)
@@ -154,6 +208,8 @@ extern "C" void init(Structure const & data)
 	
 	if(data.modules.length > 0)
 	{
+		Console::main << "ELF Modukle:\n";
+		dump_elf(data.modules[0].start.data<elf::Header>());
 		run_program0(data.modules[0]);
 	}
 	

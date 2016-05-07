@@ -6,7 +6,7 @@ LD=ld
 
 IDT_DISPATCH = _ZN3IDT8dispatchEP8CpuState
 
-FLAGS = -mno-sse -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists -O3 -g
+FLAGS = -mno-sse -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists -I../stdlib/include  -O3 -g
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
@@ -15,11 +15,12 @@ SRCS = $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
 LIBGCC = $(shell gcc -m32 -print-libgcc-file-name)
+LIBSTD = ../stdlib/libstd.a
 
 all: kernel-base.ker
 
 kernel-base.ker: $(OBJS)
-	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^) $(LIBGCC) 
+	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^) $(LIBGCC) $(LIBSTD)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
@@ -54,7 +55,7 @@ run:
 		-no-reboot \
 		-no-shutdown \
 		-serial stdio \
-		-initrd ../program0/program0.bin 
+		-initrd ../program0/program 
 
 insight:
 	objdump -d kernel-base.ker | c++filt | less
