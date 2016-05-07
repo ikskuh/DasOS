@@ -30,7 +30,7 @@ namespace multiboot
     
     mbarray() = delete;
   public:
-    T const & operator [](size_t idx) {
+    T const & operator [](size_t idx) const {
       return this->data[idx];
     }
     

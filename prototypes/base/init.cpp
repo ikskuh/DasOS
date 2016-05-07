@@ -1,5 +1,3 @@
-#include <inttypes.h>
-
 #include "console.hpp"
 #include "pmm.hpp"
 #include "numeric.hpp"
@@ -15,6 +13,9 @@
 #include "driver/keyboard.hpp"
 #include "driver/scheduler.hpp"
 
+#include <inttypes.h>
+#include <new>
+
 using namespace multiboot;
 using namespace console_tools;
 
@@ -27,6 +28,28 @@ extern dummy kernelEndMarker;
 driver::Timer timer;
 driver::Keyboard keyboardDriver;
 driver::Scheduler scheduler;
+
+VMMContext *kernelContext;
+
+void run_program0(Module const & module)
+{
+	for(uint32_t ptr = 0; ptr < module.size(); ptr += 0x1000)
+	{
+		kernelContext->provide(
+			virtual_t(ptr),
+			VMMFlags::Writable | VMMFlags::UserSpace);
+	}
+	char * src = module.start.data<char>();
+	char * dst = (char*)0x40000000;
+	for(uint32_t ptr = 0; ptr < module.size(); ptr++)
+	{
+		dst[ptr] = src[ptr];
+	}
+	
+	using EntryPoint = void (*)();
+	EntryPoint ep = (EntryPoint)0x40000000;
+	ep();
+}
 
 extern "C" void init(Structure const & data)
 {
@@ -97,18 +120,18 @@ extern "C" void init(Structure const & data)
 	Console::main << "Interrupts set up.\n";
 	
 	Console::main << "Creating VMM Context...\n";
-	VMMContext kernelContext;
+	kernelContext = new (PMM::alloc().data()) VMMContext();
 	
 	
 	Console::main << "Mapping memory...\n";
 	for(uint32_t addr = 0; addr < 4096 * 1024; addr += 0x1000) {
-		kernelContext.map(
+		kernelContext->map(
 			virtual_t(addr), 
 			physical_t(addr),
 			VMMFlags::Writable | VMMFlags::UserSpace);
 	}
 	Console::main << "Active Context...\n";
-	VMM::activate(kernelContext);
+	VMM::activate(*kernelContext);
 	
 	Console::main << "Active Paging...\n";
 	VMM::enable();
@@ -122,14 +145,13 @@ extern "C" void init(Structure const & data)
 	
 	asm volatile("sti");
 	
-	// asm volatile ("int $0x00");
-	
 	Console::main << "Interrupts enabled.\n";
   
-	uint32_t *invalidAddress = (uint32_t*)0xFF0000FF;
 	
-	Console::main <<
-		"Value at " << invalidAddress << " = " << (*invalidAddress) << "\n";
+	if(data.modules.length > 0)
+	{
+		run_program0(data.modules[0]);
+	}
 	
   while(true);
 }

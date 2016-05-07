@@ -53,7 +53,11 @@ run:
 		-d cpu_reset,int \
 		-no-reboot \
 		-no-shutdown \
-		-serial stdio
+		-serial stdio \
+		-initrd ../program0/program0.bin 
+
+insight:
+	objdump -d kernel-base.ker | c++filt | less
 
 bnr: kernel-base.ker run
 
