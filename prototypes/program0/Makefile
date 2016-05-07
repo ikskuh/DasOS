@@ -9,7 +9,7 @@ ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
 
-ARTIFACT = program0.bin
+ARTIFACT = program
 
 SRCS = $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
@@ -19,7 +19,7 @@ LIBGCC = $(shell gcc -m32 -print-libgcc-file-name)
 all: $(ARTIFACT)
 
 $(ARTIFACT): $(OBJS)
-	$(LD) -melf_i386 -Tlinker.ld -o $(ARTIFACT) $(addprefix obj/, $^) $(LIBGCC) 
+	$(LD) -Tlinker.ld -o $(ARTIFACT) $(addprefix obj/, $^) $(LIBGCC) 
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
@@ -39,23 +39,5 @@ $(ARTIFACT): $(OBJS)
 %.o: src/%.S
 	$(AS) $(CFLAGS) -c -o obj/$@ $<
 
-# Linux/Multiboot boot specific:
-# -kernel bzImage use 'bzImage' as kernel image
-# -append cmdline use 'cmdline' as kernel command line
-# -initrd file    use 'file' as initial ram disk
-# -dtb    file    use 'file' as device tree image
-
-
-run:
-	qemu-system-i386 \
-		-kernel kernel-base.ker \
-		-m 64 \
-		-d cpu_reset,int \
-		-no-reboot \
-		-no-shutdown \
-		-serial stdio
-
-bnr: kernel-base.ker run
-
-deploy: kernel-base.ker
+deploy: $(ARTIFACT)
 	cp $(ARTIFACT) /srv/tftp/$(ARTIFACT)
