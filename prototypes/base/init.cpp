@@ -13,7 +13,6 @@
 
 #include "driver/timer.hpp"
 #include "driver/keyboard.hpp"
-#include "driver/scheduler.hpp"
 
 #include <inttypes.h>
 #include <new>
@@ -31,7 +30,6 @@ extern dummy kernelEndMarker;
 
 driver::Timer timer;
 driver::Keyboard keyboardDriver;
-// driver::Scheduler scheduler;
 
 VMMContext * kernelContext;
 
@@ -105,57 +103,24 @@ static void dump_elf(elf::Header *header)
 	}
 }
 
-void delay()
+static void initializePMM(Structure const & data)
 {
-	for(volatile uint32_t i = 0; i < 0x1000000; i++);
-}
-
-void task_a(void)
-{
-	while (1) {
-		Console::main.put('A');
-		delay();
-	}
-}
- 
-void task_b(void)
-{
-	while (1) {
-		Console::main.put('B');
-		delay();
-	}
-}
-
-extern "C" void init(Structure const & data)
-{
-	Console::main
-		<< "Hello World!\n"
-		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
-		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
-		<< "Hello default color.\n";
-  
-	GDT::initialize();
-	
-  Console::main
-    << "bootloader name:  " << data.bootLoaderName << "\n"
-    << "command line:     " << data.commandline << "\n"
-    << "count of modules: " << data.modules.length << "\n"
-    << "count of mmaps:   " << data.memoryMaps.length << "\n";
-  for(auto &mmap : data.memoryMaps) {
-    if(mmap.length == 0) {
-      continue;
+	for(auto &mmap : data.memoryMaps) {
+		if(mmap.length == 0) {
+			continue;
     }
     if(mmap.isFree() == false) {
       continue;
     }
-    Console::main
-      << "mmap: "
-      << "start: " << hex(mmap.base) << ", length: " << hex(mmap.length)
-      << ", " << mmap.entry_size
-      << ", " << sizeof(mmap)
-      << "\n";
+		
+    //Console::main
+		//<< "mmap: "
+		//<< "start: " << hex(mmap.base) << ", length: " << hex(mmap.length)
+		//<< ", " << mmap.entry_size
+		//<< ", " << sizeof(mmap)
+		//<< "\n";
     if(mmap.base > 0xFFFFFFFF) {
-        Console::main << "mmap out of 4 gigabyte range." << "\n";
+        //Console::main << "mmap out of 4 gigabyte range." << "\n";
         continue;
     }    
     if(mmap.isFree()) {
@@ -180,8 +145,31 @@ extern "C" void init(Structure const & data)
     PMM::markUsed(physical_t(ptr));
     ptr += 0x1000;
   }
+	
 	// nullptr is not valid.
 	PMM::markUsed(physical_t(nullptr));
+	
+	// Mark the video memory as used.
+	PMM::markUsed(physical_t(0xB8000));
+}
+
+extern "C" void init(Structure const & data)
+{
+	Console::main
+		<< "Hello World!\n"
+		<< FColor(Color::Yellow) << "Hello color!" << FColor() << "\n"
+		<< BColor(Color::Blue) << "Hello blue!" << BColor() << "\n"
+		<< "Hello default color.\n";
+  
+	GDT::initialize();
+	
+  Console::main
+    << "bootloader name:  " << data.bootLoaderName << "\n"
+    << "command line:     " << data.commandline << "\n"
+    << "count of modules: " << data.modules.length << "\n"
+    << "count of mmaps:   " << data.memoryMaps.length << "\n";
+  
+	initializePMM(data);
   
   auto freeMemory = PMM::getFreeMemory();
   Console::main
@@ -218,7 +206,6 @@ extern "C" void init(Structure const & data)
 	
 	timer.install();
 	keyboardDriver.install();
-	//scheduler.install();
 	
 	Console::main << "Drivers installed.\n";
 	
@@ -226,14 +213,7 @@ extern "C" void init(Structure const & data)
 	
 	Console::main << "Interrupts enabled.\n";
 	
-	//driver::Task *taskB = scheduler.spawn(task_b);
-	//driver::Task *taskA = scheduler.spawn(task_a);
-	//
-	//Console::main
-		//<< "Task A: " << taskA << "\n"
-		//<< "Task B: " << taskB << "\n";
-	
-	if(data.modules.length > 0 && false)
+	if(data.modules.length > 0)
 	{
 		Console::main << "ELF Modukle:\n";
 		dump_elf(data.modules[0].start.data<elf::Header>());
