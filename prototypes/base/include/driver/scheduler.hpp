@@ -6,16 +6,21 @@
 
 namespace driver
 {
+	using EntryPoint = void (*)();
+
 	class Task
 	{
+		friend class Scheduler;
 	private:
-		physical_t stackBottom;
+		Task *previous, *next;
 		CpuState *cpu;
-	public:
-		Task();
+		physical_t stackBottom;
+		
+		Task(EntryPoint ep);
 		Task(const Task &) = delete;
 		Task(Task &&) = delete;
 		~Task();
+	public:
 	};
 
 	class Scheduler : 
@@ -23,12 +28,17 @@ namespace driver
 	{
 	private:
 		static Scheduler *current;
-		static void dispatch(CpuState *cpu);
+		static void dispatch(CpuState *& cpu);
 		
-		void next(CpuState *cpu);
+		Task *currentTask;
+		Task *firstTask;
+		Task *lastTask;
+		CpuState * next(CpuState *cpu);
 	public:
 		Scheduler();
 		
 		void install() override;
+		
+		Task *spawn(EntryPoint ep);
 	};
 }

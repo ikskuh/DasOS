@@ -31,9 +31,9 @@ extern dummy kernelEndMarker;
 
 driver::Timer timer;
 driver::Keyboard keyboardDriver;
-driver::Scheduler scheduler;
+// driver::Scheduler scheduler;
 
-VMMContext *kernelContext;
+VMMContext * kernelContext;
 
 static const uint32_t entryPointAddress = 0x40000000;
 
@@ -124,87 +124,6 @@ void task_b(void)
 		Console::main.put('B');
 		delay();
 	}
-}
-
-static uint8_t stack_a[4096];
-static uint8_t stack_b[4096];
- 
-/*
- * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
- * ohne dass ihm andere Tasks Dinge ueberschreiben. Ausserdem braucht ein Task
- * einen Einsprungspunkt.
- */
-CpuState* init_task(uint8_t* stack, void (*entry)())
-{
-	/*
-	 * CPU-Zustand fuer den neuen Task festlegen
-	 */
-	CpuState new_state;
-	{
-		new_state.eax = 0;
-		new_state.ebx = 0;
-		new_state.ecx = 0;
-		new_state.edx = 0;
-		new_state.esi = 0;
-		new_state.edi = 0;
-		new_state.ebp = 0;
-		//new_state..esp = unbenutzt (kein Ring-Wechsel)
-		new_state.eip = reinterpret_cast<uint32_t>(entry);
-
-		/* Ring-0-Segmentregister */
-		new_state.cs  = 0x08;
-		//new_state..ss  = unbenutzt (kein Ring-Wechsel)
-
-		/* IRQs einschalten (IF = 1) */
-		new_state.eflags = 0x202;
-	}
-
-	/*
-	 * Den angelegten CPU-Zustand auf den Stack des Tasks kopieren, damit es am
-	 * Ende so aussieht als waere der Task durch einen Interrupt unterbrochen
-	 * worden. So kann man dem Interrupthandler den neuen Task unterschieben
-	 * und er stellt einfach den neuen Prozessorzustand "wieder her".
-	 */
-	CpuState* state = (CpuState*) (stack + 4096 - sizeof(new_state));
-	*state = new_state;
-
-	return state;
-}
-
-static int current_task = -1;
-static int num_tasks = 2;
-static CpuState* task_states[2];
- 
-void init_multitasking(void)
-{
-	task_states[0] = init_task(stack_a, task_a);
-	task_states[1] = init_task(stack_b, task_b);
-}
- 
-/*
- * Gibt den Prozessorzustand des naechsten Tasks zurueck. Der aktuelle
- * Prozessorzustand wird als Parameter uebergeben und gespeichert, damit er
- * beim naechsten Aufruf des Tasks wiederhergestellt werden kann
- */
-void schedule(CpuState *& cpu)
-{
-	/*
-	 * Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
-	 * gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
-	 * wir spaeter nicht wieder.
-	 */
-	if (current_task >= 0) {
-			task_states[current_task] = cpu;
-	}
-
-	/*
-	 * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
-	 */
-	current_task++;
-	current_task %= num_tasks;
-
-	/* Prozessorzustand des neuen Tasks aktivieren */
-	cpu = task_states[current_task];
 }
 
 extern "C" void init(Structure const & data)
@@ -299,11 +218,7 @@ extern "C" void init(Structure const & data)
 	
 	timer.install();
 	keyboardDriver.install();
-	scheduler.install();
-	
-	IDT::interrupt(0x20) = Interrupt(schedule);
-	
-	init_multitasking();
+	//scheduler.install();
 	
 	Console::main << "Drivers installed.\n";
 	
@@ -311,7 +226,14 @@ extern "C" void init(Structure const & data)
 	
 	Console::main << "Interrupts enabled.\n";
 	
-	if(data.modules.length > 0)
+	//driver::Task *taskB = scheduler.spawn(task_b);
+	//driver::Task *taskA = scheduler.spawn(task_a);
+	//
+	//Console::main
+		//<< "Task A: " << taskA << "\n"
+		//<< "Task B: " << taskB << "\n";
+	
+	if(data.modules.length > 0 && false)
 	{
 		Console::main << "ELF Modukle:\n";
 		dump_elf(data.modules[0].start.data<elf::Header>());

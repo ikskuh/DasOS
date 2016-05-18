@@ -43,7 +43,6 @@ public:
 	 * Unmaps a given page from the virtual memory.
 	 */
 	void unmap(virtual_t virt);
-	
 };
 
 class VMM

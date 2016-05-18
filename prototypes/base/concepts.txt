@@ -1,0 +1,45 @@
+
+# DasOS Concepts
+
+## Memory Layout
+
+| Start      | Length     | Length -h | Description                                                              |
+|------------|------------|-----------|--------------------------------------------------------------------------|
+| 0x00000000 | 0x40000000 | 1 GB      | Kernel Space. This is where the kernel and its functionality is located. |
+| 0x00100000 | ???        | ???       | Kernel entry point and load target. Here the kernel will be loaded.      |
+| 0x20000000 | 0x20000000 | 512 MB    | Kernel Heap. This memory is used for dynamic allocations in the kernel.  |
+| 0x40000000 | 0xC0000000 | 3 GB      | User Space. This is where Artifacts are loaded and executed.             |
+
+### Kernel Heap
+
+A simple storage allocator.
+
+Storage of:
+- Task Descriptions
+- Memory Mapping Information
+- Location of loaded artifacts
+- ...
+
+## Starting a Task
+
+### Requirements
+
+- allocate task structure
+- allocate mapping directory
+- fill mapping directory with
+	- Lower End: Copy kernel mappings
+	- Upper End: Copy artifact data
+- allocate task stack
+
+## Executables, Libraries and Stuff
+
+Artifact = Executable + Library + Shared Memory
+
+### Artifact Types
+
+| Type       | Entry Point |  Description                                                                                                                         |
+|------------|-------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| Program    | _main       | A program targeted at user or system administrator. Can be executed with command line arguments. Uses stdin, stdout, stderr.         |
+| Library    | _libmain    | Can be loaded by other artifacts and allows utilization of a shared set of functions.                                                |
+| Service    | _svcmain    | A service is a background worker that won't be terminated when its main function returns. Can be 'woken up' by an external artifact. |
+| Driver     | _drvinit    | A driver is loaded at system start and is allowed to request and dispatch interrupts. Can be used to create a flexible OS.           |
