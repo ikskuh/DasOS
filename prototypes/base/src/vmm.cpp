@@ -1,22 +1,19 @@
 #include "vmm.hpp"
 #include <new>
 #include "console.hpp"
+#include "asm.hpp"
 
 void VMM::enable()
 {
-	uint32_t cr0;
-	asm volatile("mov %%cr0, %0" : "=r" (cr0));
-	cr0 |= (1 << 31);
-	asm volatile("mov %0, %%cr0" : : "r" (cr0));
+	uint32_t val;
+	ASM_READ_REG(cr0, val);
+	val |= (1 << 31);
+	ASM_WRITE_REG(cr0, val);
 }
 
 void VMM::activate(VMMContext & context)
 {
-	/*
-	Console::main
-		<< "Activate PD " << context.directory << "\n";
-	//*/
-	asm volatile("mov %0, %%cr3" : : "r" (context.directory));
+	ASM_WRITE_REG(cr3, context.directory);
 }
 
 VMMContext::VMMContext() : 
@@ -68,12 +65,6 @@ void VMMContext::provide(virtual_t virt, VMMFlags flags)
 	this->map(virt, PMM::alloc(), flags | VMMFlags::SystemAllocated);
 }
 
-static inline void invlpg(void* m)
-{
-    /* Clobber memory to avoid optimizer re-ordering access before invlpg, which may cause nasty bugs. */
-    asm volatile ( "invlpg (%0)" : : "b"(m) : "memory" );
-}
-
 /**
  * Maps a given page into the virtual memory.
  */
@@ -92,7 +83,7 @@ void VMMContext::map(virtual_t virt, physical_t phys, VMMFlags flags)
 	Console::main <<
 		"Mapping " << virt << " -> " << phys << " [" << bin(static_cast<int>(flags)) << "]: " << hex(pageDesc) << "\n";
 	//*/
-	invlpg(virt.data());
+	ASM::invlpg(virt.data());
 }
 
 /**

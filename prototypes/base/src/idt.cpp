@@ -1,5 +1,5 @@
 #include "idt.hpp"
-#include "io.hpp"
+#include "asm.hpp"
 #include "bsod.hpp"
 #include "pic.hpp"
 
@@ -42,14 +42,7 @@ void IDT::initialize()
 #undef ISR
 #undef ISR_ERR
 
-	struct {
-		uint16_t limit;
-		void* pointer;
-	} __attribute__((packed)) idtp = {
-		.limit = IDT::length * sizeof(InterruptDescriptor) - 1,
-		.pointer = IDT::descriptors,
-	};
-	asm volatile("lidt %0" : : "m" (idtp));
+	ASM::lidt(IDT::descriptors, IDT::length);
 	
 	IDT::setupPIC();
 }
