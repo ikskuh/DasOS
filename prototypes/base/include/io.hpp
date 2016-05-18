@@ -1,13 +1,7 @@
 #pragma once
 
-static inline void outb(uint16_t port, uint8_t data)
-{
-	asm volatile ("outb %0, %1" : : "a" (data), "Nd" (port));
-}
+#include "asm.hpp"
 
-static inline uint8_t inb(uint16_t port)
-{
-	uint8_t data;
-	asm volatile ("inb %1, %0" : "=a" (data) : "d" (port));
-	return data;
-}
+// Import functions into global namespace
+using ASM::inb;
+using ASM::outb;

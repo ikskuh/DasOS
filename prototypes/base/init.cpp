@@ -11,6 +11,8 @@
 #include "elf.hpp"
 #include "bsod.hpp"
 
+#include "asm.hpp"
+
 #include "driver/timer.hpp"
 #include "driver/keyboard.hpp"
 
@@ -185,7 +187,6 @@ extern "C" void init(Structure const & data)
 	Console::main << "Creating VMM Context...\n";
 	kernelContext = new (PMM::alloc().data()) VMMContext();
 	
-	
 	Console::main << "Mapping memory...\n";
 	for(uint32_t addr = 0; addr < 4096 * 1024; addr += 0x1000) {
 		kernelContext->map(
@@ -209,7 +210,8 @@ extern "C" void init(Structure const & data)
 	
 	Console::main << "Drivers installed.\n";
 	
-	asm volatile("sti");
+	//asm volatile("sti");
+	ASM::sti();
 	
 	Console::main << "Interrupts enabled.\n";
 	
