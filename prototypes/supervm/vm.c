@@ -1,10 +1,13 @@
 #include "vm.h"
 
+#include <stdio.h>
+
 typedef struct 
 {
 	uint32_t input0;
 	uint32_t input1;
 	uint32_t argument;
+	uint32_t additional;
 	
 	uint32_t output;
 } CommandInfo;
@@ -12,6 +15,27 @@ typedef struct
 static void cmd_copy(CommandInfo *info)
 {
 	info->output = info->input0;
+}
+
+static void cmd_math(CommandInfo *info)
+{
+	switch(info->additional)
+	{
+		// IMPORTANT:
+		// input1 - input0 because then input0 can be a fixed value 
+#define S(name, op) case name: info->output = info->input1 op info->input0; break;
+		S(VM_MATH_ADD, +)
+		S(VM_MATH_SUB, -)
+		S(VM_MATH_MUL, *)
+		S(VM_MATH_DIV, /)
+		S(VM_MATH_MOD, %)
+		S(VM_MATH_AND, &)
+		S(VM_MATH_OR, |)
+		S(VM_MATH_XOR, ^)
+#undef S
+		case VM_MATH_NOT: info->output = ~info->input0; break;
+		default: vm_assert(0, "Invalid instruction: MATH command not defined."); break;
+	}
 }
 
 int vm_step_process(Process *process)
@@ -78,10 +102,12 @@ int vm_step_process(Process *process)
 		}
 		
 		info.argument = instr.argument;
+		info.additional = instr.cmdinfo;
 		
 		switch(instr.command)
 		{
 			case VM_CMD_COPY: cmd_copy(&info); break;
+			case VM_CMD_MATH: cmd_math(&info); break;
 			default: vm_assert(0, "Invalid instruction: command undefined.");
 		}
 		
