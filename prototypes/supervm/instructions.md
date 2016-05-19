@@ -79,14 +79,71 @@ An instruction is only executed when all conditions are met.
 |  5 | BPGET       | output = BP                          |
 |  6 | BPSET       | output = BP = input0                 |
 |  7 | RSTSTACK    | output = SP = BP                     |
-|  8 |             |                                      |
-|  9 |             |                                      |
-| 10 |             |                                      |
+|  8 | MATH        | output = input0 OP[info] input1      |
+|  9 | spget       | output = SP + input0                 |
+| 10 | spset       | output = SP + input0 = input1        |
 | 11 |             |                                      |
 | 12 |             |                                      |
 | 13 |             |                                      |
 | 14 |             |                                      |
 | 15 |             |                                      |
 
+### Math
+The math operator is a compound operator that contains all 
+arithmetic operations. The arithmetic operation is selected
+by the `cmdinfo`.
+
+| cmdinfo | Operation                   |
+|---------|-----------------------------|
+|       0 | Addition                    |
+|       1 | Subtraction                 |
+|       2 | Multiplication              |
+|       3 | Division                    |
+|       4 | Euclidean Division / Modulo |
+|       5 | Bitwise Logic And           |
+|       6 | Bitwise Logic Or            |
+|       7 | Bitwise Logic Xor           |
+|       8 | Bitwise Logic Not           |
+|       9 | Rotating Bit Shift Left     |
+|      10 | Rotating Bit Shift Right    |
+|      11 | Arithmetic Bit Shift Left   |
+|      12 | Arithmetic Bit Shift Right  |
+|      13 | Logic Bit Shift Left        |
+|      14 | Logic Bit Shift Right       |
 
 ## Assembler Mnemonics
+
+| Mnemonic | Arg? | i0   | i1   | Cmd   | CmdInfo  | Output  |
+|----------|------|------|------|-------|----------|---------|
+| nop      |   no | zero | zero | copy  | 0        | discard |
+| push     |  yes | arg  | zero | copy  | 0        | push    |
+| drop     |   no | pop  | zero | copy  | 0        | discard |
+| dup      |   no | peek | zero | copy  | 0        | push    |
+| jmp      |  yes | arg  | zero | copy  | 0        | jump    |
+| jmpi     |   no | pop  | zero | copy  | 0        | jump    |
+| ret      |   no | pop  | zero | copy  | 0        | jump    |
+| load     |  yes | arg  | zero | load  | 0       | push    |
+| loadi    |   no | pop  | zero | load  | 0       | push    |
+| store    |  yes | arg  | pop  | store | 0       | discard |
+| storei   |   no | pop  | pop  | store | 0       | discard |
+| get      |  yes | arg  | zero | get   | 0       | push    |
+| geti     |   no | pop  | zero | get   | 0       | push    |
+| set      |  yes | arg  | pop  | set   | 0       | discard |
+| seti     |   no | pop  | pop  | set   | 0       | discard |
+| bpget    |   no | zero | zero | bpget | 0       | push    |
+| bpset    |   no | pop  | zero | bpset | 0       | discard |
+| add      |   no | pop  | pop  | math  | 0        | push    |
+| sub      |   no | pop  | pop  | math  | 1        | push    |
+| mul      |   no | pop  | pop  | math  | 2        | push    |
+| div      |   no | pop  | pop  | math  | 3        | push    |
+| mod      |   no | pop  | pop  | math  | 4        | push    |
+| and      |   no | pop  | pop  | math  | 5        | push    |
+| or       |   no | pop  | pop  | math  | 6        | push    |
+| xor      |   no | pop  | pop  | math  | 7        | push    |
+| not      |   no | pop  | zero | math  | 8        | push    |
+| rol      |   no | pop  | pop  | math  | 9        | push    |
+| ror      |   no | pop  | pop  | math  | 10       | push    |
+| asl      |   no | pop  | pop  | math  | 11       | push    |
+| asr      |   no | pop  | pop  | math  | 12       | push    |
+| shl      |   no | pop  | pop  | math  | 13       | push    |
+| shr      |   no | pop  | pop  | math  | 14       | push    |
