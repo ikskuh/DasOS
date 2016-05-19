@@ -45,11 +45,11 @@ An SuperVM instruction is composed of multiple components:
 
 | Component | Range             | Size | Function                                 |
 |-----------|-------------------|------|-------------------------------------------|
-| execution | See below.        |    6 | When is the instruction executed.        |
+| execution | See below.        |    4 | When is the instruction executed.        |
 | input0    | Zero/Pop/Peek/Arg |    2 | Where does input0 come from?             |
 | input1    | Zero/Pop          |    1 | Where does input1 come from?             |
-| command   | [8bit]            |    8 | Which command is executed?               |
-| cmdinfo   | [12bit]           |   12 | Parameter value for the command.         |
+| command   | [6bit]            |    6 | Which command is executed?               |
+| cmdinfo   | [16bit]           |   16 | Parameter value for the command.         |
 | flagmod   | yes/no            |    1 | Does this command modifies flags?        |
 | output    | Discard/Push/Jump |    2 | What is done with the output?            |
 | argument  | [32bit]           |   32 | Some commands can take extra information |
