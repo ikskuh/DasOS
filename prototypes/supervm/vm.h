@@ -50,11 +50,14 @@ extern "C" {
 #define VM_MATH_SHR 14
 
 #define VM_FLAG_NO  0
-#define VM_FLAG_YES 0
+#define VM_FLAG_YES 1
 
 #define VM_OUTPUT_DISCARD 0
 #define VM_OUTPUT_PUSH    1
 #define VM_OUTPUT_JUMP    2
+
+#define VM_FLAG_Z (1<<0)
+#define VM_FLAG_N (1<<1)
 
 typedef struct
 {
@@ -100,10 +103,19 @@ typedef struct
  */
 int vm_step_process(Process *process);
 
+/**
+ * @brief Pushes a value onto the process' stack.
+ */
 void vm_push(Process *process, uint32_t value);
 
+/**
+ * @brief Pops a value from the process' stack.
+ */
 uint32_t vm_pop(Process *process);
 
+/**
+ * @brief Returns the top value of the process' stack.
+ */
 uint32_t vm_peek(Process *process);
 
 void vm_assert(int assertion, const char *msg);

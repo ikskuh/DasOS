@@ -5,7 +5,17 @@
 
 Instruction code[] = 
 {
-	{ VM_EXEC_X, VM_EXEC_X, VM_INPUT_ZERO, VM_INPUT_ZERO, VM_CMD_COPY, 0, VM_FLAG_NO, VM_OUTPUT_DISCARD, 0 },
+	// { VM_EXEC_X, VM_EXEC_X, VM_INPUT_ZERO, VM_INPUT_ZERO, VM_CMD_COPY, 0, VM_FLAG_NO, VM_OUTPUT_DISCARD, 0 },
+	{ 
+		VM_EXEC_X, 
+		VM_EXEC_X, 
+		VM_INPUT_ZERO, 
+		VM_INPUT_ZERO, 
+		VM_CMD_COPY, 
+		0, 
+		VM_FLAG_NO, 
+		VM_OUTPUT_DISCARD, 
+		1337 },
 };
 
 void dump_proc(Process *process)
@@ -32,7 +42,10 @@ int main(int argc, const char **argv)
 	Process process = { &module, 0, 0, 0, 0 };
 	Process *p = &process;
 	
+	vm_push(p, 10);
+	dump_proc(p);
 	int stillAlive = vm_step_process(p);
+	dump_proc(p);
 	
 	printf("Process %s.\n", (stillAlive ? "still running" : "terminated"));
 	
