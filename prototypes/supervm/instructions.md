@@ -17,6 +17,7 @@ control stack access or control flow.
 |----------|---------------|-------------------------------------------------|
 |       SP | Stack Pointer | Stores the current 'top' position of the stack. |
 |       BP | Base Pointer  | Stores the current stack frame position.        |
+|       CP | Code Pointer  | Stores the instruction which is executed next.  |
 |       FG | Flag Register | Stores the state of the flags.                  |
 
 ### Stack Pointer

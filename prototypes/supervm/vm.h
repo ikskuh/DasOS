@@ -72,8 +72,16 @@ typedef struct
 _Static_assert(sizeof(Instruction) == 8, "Instruction must be 8 bytes large.");
 _Static_assert(offsetof(Instruction, argument) == 4, "Argument must be  must be 8 bytes large.");
 
+typedef struct
+{
+	Instruction *code;
+	uint32_t length;
+} Module;
+
 typedef struct 
 {
+	Module *module;
+	
 	uint32_t codePointer;
 	uint32_t stackPointer;
 	uint32_t basePointer;
@@ -82,8 +90,23 @@ typedef struct
 	uint32_t stack[VM_STACKSIZE];
 } Process;
 
+/**
+ * @brief Steps a given process.
+ *
+ * Executes a single instruction and processes input and output.
+ *
+ * @param process The process to be stepped.
+ * @returns 1 if the process is still running or 0 if the process is terminated.
+ */
+int vm_step_process(Process *process);
 
+void vm_push(Process *process, uint32_t value);
 
+uint32_t vm_pop(Process *process);
+
+uint32_t vm_peek(Process *process);
+
+void vm_assert(int assertion, const char *msg);
 
 #if defined(__cplusplus)
 }
