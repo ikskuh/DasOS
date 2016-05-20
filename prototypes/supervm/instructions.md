@@ -44,16 +44,17 @@ base pointer, then popping the previous base pointer from the stack.
 
 An SuperVM instruction is composed of multiple components:
 
-| Component | Range             | Size | Function                                 |
-|-----------|-------------------|------|-------------------------------------------|
-| execution | See below.        |    4 | When is the instruction executed.        |
-| input0    | Zero/Pop/Peek/Arg |    2 | Where does input0 come from?             |
-| input1    | Zero/Pop          |    1 | Where does input1 come from?             |
-| command   | [6bit]            |    6 | Which command is executed?               |
-| cmdinfo   | [16bit]           |   16 | Parameter value for the command.         |
-| flagmod   | yes/no            |    1 | Does this command modifies flags?        |
-| output    | Discard/Push/Jump |    2 | What is done with the output?            |
-| argument  | [32bit]           |   32 | Some commands can take extra information |
+| Component   | Range             | Size | Function                                 |
+|-------------|-------------------|------|------------------------------------------|
+| execution Z | See below.        |    2 | Excution dependend on Zero?              |
+| execution N | See below.        |    2 | Excution dependend on Negative?          |
+| input0      | Zero/Pop/Peek/Arg |    2 | Where does input0 come from?             |
+| input1      | Zero/Pop          |    1 | Where does input1 come from?             |
+| command     | [6bit]            |    6 | Which command is executed?               |
+| cmdinfo     | [16bit]           |   16 | Parameter value for the command.         |
+| flagmod     | yes/no            |    1 | Does this command modifies flags?        |
+| output      | Discard/Push/Jump |    2 | What is done with the output?            |
+| argument    | [32bit]           |   32 | Some commands can take extra information |
 
 ### Execution Modes
 
@@ -81,8 +82,8 @@ An instruction is only executed when all conditions are met.
 |  6 | BPSET       | output = BP = input0                 |
 |  7 | RSTSTACK    | output = SP = BP                     |
 |  8 | MATH        | output = input0 OP[info] input1      |
-|  9 | spget       | output = SP + input0                 |
-| 10 | spset       | output = SP + input0 = input1        |
+|  9 | SPGET       | output = SP + input0                 |
+| 10 | SPSET       | output = SP + input0 = input1        |
 | 11 |             |                                      |
 | 12 |             |                                      |
 | 13 |             |                                      |
@@ -123,16 +124,16 @@ by the `cmdinfo`.
 | jmp      |  yes | arg  | zero | copy  | 0        | jump    |
 | jmpi     |   no | pop  | zero | copy  | 0        | jump    |
 | ret      |   no | pop  | zero | copy  | 0        | jump    |
-| load     |  yes | arg  | zero | load  | 0       | push    |
-| loadi    |   no | pop  | zero | load  | 0       | push    |
-| store    |  yes | arg  | pop  | store | 0       | discard |
-| storei   |   no | pop  | pop  | store | 0       | discard |
-| get      |  yes | arg  | zero | get   | 0       | push    |
-| geti     |   no | pop  | zero | get   | 0       | push    |
-| set      |  yes | arg  | pop  | set   | 0       | discard |
-| seti     |   no | pop  | pop  | set   | 0       | discard |
-| bpget    |   no | zero | zero | bpget | 0       | push    |
-| bpset    |   no | pop  | zero | bpset | 0       | discard |
+| load     |  yes | arg  | zero | load  | 0        | push    |
+| loadi    |   no | pop  | zero | load  | 0        | push    |
+| store    |  yes | arg  | pop  | store | 0        | discard |
+| storei   |   no | pop  | pop  | store | 0        | discard |
+| get      |  yes | arg  | zero | get   | 0        | push    |
+| geti     |   no | pop  | zero | get   | 0        | push    |
+| set      |  yes | arg  | pop  | set   | 0        | discard |
+| seti     |   no | pop  | pop  | set   | 0        | discard |
+| bpget    |   no | zero | zero | bpget | 0        | push    |
+| bpset    |   no | pop  | zero | bpset | 0        | discard |
 | add      |   no | pop  | pop  | math  | 0        | push    |
 | sub      |   no | pop  | pop  | math  | 1        | push    |
 | mul      |   no | pop  | pop  | math  | 2        | push    |
