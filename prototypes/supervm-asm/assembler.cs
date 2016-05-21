@@ -14,12 +14,12 @@ namespace supervm_asm
 
 		static void Main(string[] args)
 		{
-			// MnemonicParser.GenerateFromDocumentation(@"D:\felix\projects\DasOS\prototypes\supervm\instructions.md");
+			// MnemonicParser.GenerateFromDocumentation(@"../supervm/instructions.md");
 
 			foreach(var file in args.Where(a => !a.StartsWith("-") && Path.GetExtension(a) == ".asm"))
 			{
 				var output = Path.ChangeExtension(file, ".bin");
-				var code = Assembler.Assemble(File.ReadAllText("testcode.asm"));
+				var code = Assembler.Assemble(File.ReadAllText(file));
 				
 				Console.WriteLine("{0}:", output);
 				for (int i = 0; i < code.Length; i++)
