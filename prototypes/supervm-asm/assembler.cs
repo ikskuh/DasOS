@@ -74,7 +74,7 @@ namespace supervm_asm
 	{
 		static Regex annotationMatcher = new Regex(@"\[\s*(.*?)\s*\]", RegexOptions.Compiled);
 		static Regex labelMatcher = new Regex(@"^(\w+):\s*(.*)\s*$", RegexOptions.Compiled);
-		static Regex instructionMatcher = new Regex(@"(\w+)(?:\s+(@?\w+))?", RegexOptions.Compiled);
+		static Regex instructionMatcher = new Regex(@"(\w+)(?:\s+(@?\w+|'.'))?", RegexOptions.Compiled);
 
 		public static ulong[] Assemble(string src)
 		{
@@ -128,6 +128,10 @@ namespace supervm_asm
 						{
 							// Add patch note for labels.
 							patches.Add(code.Count, argstring.Substring(1));
+						}
+						else if (argstring.StartsWith("'"))
+						{
+							argument = (uint)argstring[1];
 						}
 						else if (argstring.StartsWith("0x"))
 						{
