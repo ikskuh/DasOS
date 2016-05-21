@@ -85,6 +85,13 @@ typedef struct
 
 typedef struct 
 {
+	uint32_t pageSize;
+	uint32_t length;
+	uint8_t **pages;
+} VirtualMemoryMap;
+
+typedef struct 
+{
 	Module *module;
 	void *tag;
 	
@@ -94,6 +101,8 @@ typedef struct
 	uint32_t flags;
 	
 	uint32_t stack[VM_STACKSIZE];
+	
+	VirtualMemoryMap mmap;
 } Process;
 
 typedef struct 
