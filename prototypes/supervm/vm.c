@@ -84,7 +84,7 @@ int vm_step_process(Process *process)
 	// the execution condition is met.
 	if(exec)
 	{
-		CommandInfo info;
+		CommandInfo info = { 0 };
 		switch(instr.input0)
 		{
 			case VM_INPUT_ZERO: info.input0 = 0; break;
