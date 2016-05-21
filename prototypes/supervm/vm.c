@@ -7,6 +7,20 @@ static void cmd_copy(CommandInfo *info)
 	info->output = info->input0;
 }
 
+// |  1 | STORE       | output = MEMORY[input0] = input1     |
+// |  2 | LOAD        | output = MEMORY[input0]              |
+
+static void cmd_load(Process *p, CommandInfo *info)
+{
+	info->output = vm_read_byte(p, info->input0);
+}
+
+static void cmd_store(Process *p, CommandInfo *info)
+{
+	vm_write_byte(p, info->input0, info->input1);
+	info->output = info->input1;
+}
+
 static void cmd_math(CommandInfo *info)
 {
 	switch(info->additional)
@@ -97,6 +111,8 @@ int vm_step_process(Process *process)
 		switch(instr.command)
 		{
 			case VM_CMD_COPY: cmd_copy(&info); break;
+			case VM_CMD_STORE: cmd_store(process, &info); break;
+			case VM_CMD_LOAD: cmd_load(process, &info); break;
 			case VM_CMD_MATH: cmd_math(&info); break;
 			case VM_CMD_SYSCALL: vm_syscall(process, &info); break;
 			case VM_CMD_HWIO: vm_hwio(process, &info); break;
@@ -153,4 +169,30 @@ uint32_t vm_peek(Process *process)
 {
 	vm_assert(process != NULL, "process must not be NULL.");
 	return process->stack[process->stackPointer];
+}
+
+
+
+
+
+uint8_t vm_read_byte(Process *process, uint32_t address)
+{
+	vm_assert(process != NULL, "process must not be NULL.");
+	
+	uint32_t page  = address / process->mmap.pageSize;
+	uint32_t index = address % process->mmap.pageSize;
+	vm_assert(page < process->mmap.length, "Out of memory.");
+	
+	return process->mmap.pages[page][index];
+}
+
+void vm_write_byte(Process *process, uint32_t address, uint8_t value)
+{
+	vm_assert(process != NULL, "process must not be NULL.");
+	
+	uint32_t page  = address / process->mmap.pageSize;
+	uint32_t index = address % process->mmap.pageSize;
+	vm_assert(page < process->mmap.length, "Out of memory.");
+	
+	process->mmap.pages[page][index] = value;
 }

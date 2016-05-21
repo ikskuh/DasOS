@@ -140,6 +140,19 @@ uint32_t vm_pop(Process *process);
  */
 uint32_t vm_peek(Process *process);
 
+/**
+ * Reads a byte from process memory.
+ * @arg process
+ * @arg address The address to read from.
+ */
+uint8_t vm_read_byte(Process *process, uint32_t address);
+
+/**
+ * Writes a byte to process memory.
+ * @arg process
+ * @arg address The address to read from.
+ */
+void vm_write_byte(Process *process, uint32_t address, uint8_t value);
 
 // The following functions need to be host-implemented.
 
