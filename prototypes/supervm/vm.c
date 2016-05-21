@@ -21,6 +21,31 @@ static void cmd_store(Process *p, CommandInfo *info)
 	info->output = info->input1;
 }
 
+static void cmd_spget(Process *p, CommandInfo *info)
+{
+	info->output = p->stackPointer;
+}
+
+static void cmd_spset(Process *p, CommandInfo *info)
+{
+	info->output = p->stackPointer = info->input0;
+}
+
+static void cmd_bpget(Process *p, CommandInfo *info)
+{
+	info->output = p->basePointer;
+}
+
+static void cmd_bpset(Process *p, CommandInfo *info)
+{
+	info->output = p->basePointer = info->input0;
+}
+
+static void cmd_cpget(Process *p, CommandInfo *info)
+{
+	info->output = p->codePointer + info->additional;
+}
+
 static void cmd_math(CommandInfo *info)
 {
 	switch(info->additional)
@@ -116,6 +141,11 @@ int vm_step_process(Process *process)
 			case VM_CMD_MATH: cmd_math(&info); break;
 			case VM_CMD_SYSCALL: vm_syscall(process, &info); break;
 			case VM_CMD_HWIO: vm_hwio(process, &info); break;
+			case VM_CMD_SPGET: cmd_spget(process, &info); break;
+			case VM_CMD_SPSET: cmd_spset(process, &info); break;
+			case VM_CMD_BPGET: cmd_bpget(process, &info); break;
+			case VM_CMD_BPSET: cmd_bpset(process, &info); break;
+			case VM_CMD_CPGET: cmd_cpget(process, &info); break;
 			default: vm_assert(0, "Invalid instruction: command undefined.");
 		}
 		

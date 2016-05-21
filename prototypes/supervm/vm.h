@@ -28,7 +28,7 @@ extern "C" {
 #define VM_CMD_SET      4
 #define VM_CMD_BPGET    5
 #define VM_CMD_BPSET    6
-#define VM_CMD_RSTSTACK 7
+#define VM_CMD_CPGET    7
 #define VM_CMD_MATH     8
 #define VM_CMD_SPGET    9
 #define VM_CMD_SPSET    10

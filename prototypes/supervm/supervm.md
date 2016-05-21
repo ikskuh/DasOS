@@ -80,7 +80,7 @@ An instruction is only executed when all conditions are met.
 |  4 | SET         | output = STACK[BP + input0] = input1 |
 |  5 | BPGET       | output = BP                          |
 |  6 | BPSET       | output = BP = input0                 |
-|  7 | RSTSTACK    | output = SP = BP                     |
+|  7 | CPGET       | output = CP + cmdinfo                |
 |  8 | MATH        | output = input0 OP[info] input1      |
 |  9 | SPGET       | output = SP + input0                 |
 | 10 | SPSET       | output = SP + input0 = input1        |
@@ -134,6 +134,9 @@ by the `cmdinfo`.
 | seti     |   no | pop  | pop  | set     | 0        | discard | no     |
 | bpget    |   no | zero | zero | bpget   | 0        | push    | no     |
 | bpset    |   no | pop  | zero | bpset   | 0        | discard | no     |
+| spget    |   no | zero | zero | spget   | 0        | push    | no     |
+| spset    |   no | pop  | zero | spset   | 0        | discard | no     |
+| cpget    |   no | zero | zero | cpget   | 1        | push    | no     |
 | add      |   no | pop  | pop  | math    | 0        | push    | no     |
 | sub      |   no | pop  | pop  | math    | 1        | push    | no     |
 | cmp      |   no | pop  | pop  | math    | 1        | discard | yes    |
