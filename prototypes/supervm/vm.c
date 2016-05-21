@@ -7,9 +7,6 @@ static void cmd_copy(CommandInfo *info)
 	info->output = info->input0;
 }
 
-// |  1 | STORE       | output = MEMORY[input0] = input1     |
-// |  2 | LOAD        | output = MEMORY[input0]              |
-
 static void cmd_load(Process *p, CommandInfo *info)
 {
 	info->output = vm_read_byte(p, info->input0);
@@ -44,6 +41,21 @@ static void cmd_bpset(Process *p, CommandInfo *info)
 static void cmd_cpget(Process *p, CommandInfo *info)
 {
 	info->output = p->codePointer + info->additional;
+}
+
+static inline int16_t makeSigned(uint16_t val)
+{
+	return *((int16_t*)&val);
+}
+
+static void cmd_get(Process *p, CommandInfo *info)
+{
+	info->output = p->stack[p->basePointer + makeSigned(info->input0)];
+}
+
+static void cmd_set(Process *p, CommandInfo *info)
+{
+	info->output = p->stack[p->basePointer + makeSigned(info->input0)] = info->input1;
 }
 
 static void cmd_math(CommandInfo *info)
@@ -146,6 +158,8 @@ int vm_step_process(Process *process)
 			case VM_CMD_BPGET: cmd_bpget(process, &info); break;
 			case VM_CMD_BPSET: cmd_bpset(process, &info); break;
 			case VM_CMD_CPGET: cmd_cpget(process, &info); break;
+			case VM_CMD_GET: cmd_get(process, &info); break;
+			case VM_CMD_SET: cmd_set(process, &info); break;
 			default: vm_assert(0, "Invalid instruction: command undefined.");
 		}
 		

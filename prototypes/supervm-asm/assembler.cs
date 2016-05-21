@@ -14,7 +14,12 @@ namespace supervm_asm
 
 		static void Main(string[] args)
 		{
-			// MnemonicParser.GenerateFromDocumentation(@"../supervm/supervm.md");
+			if(args.Contains("-gen-code"))
+			{
+				MnemonicParser.GenerateFromDocumentation(
+					@"../supervm/supervm.md");
+				return;
+			}
 
 			foreach(var file in args.Where(a => !a.StartsWith("-") && Path.GetExtension(a) == ".asm"))
 			{
@@ -74,7 +79,7 @@ namespace supervm_asm
 	{
 		static Regex annotationMatcher = new Regex(@"\[\s*(.*?)\s*\]", RegexOptions.Compiled);
 		static Regex labelMatcher = new Regex(@"^(\w+):\s*(.*)\s*$", RegexOptions.Compiled);
-		static Regex instructionMatcher = new Regex(@"(\w+)(?:\s+(@?\w+|'.'))?", RegexOptions.Compiled);
+		static Regex instructionMatcher = new Regex(@"(\w+)(?:\s+([@-]?\w+|'.'))?", RegexOptions.Compiled);
 
 		public static ulong[] Assemble(string src)
 		{
@@ -147,10 +152,23 @@ namespace supervm_asm
 						}
 						else
 						{
-							argument = Convert.ToUInt32(argstring, 10);
+							if(argstring.StartsWith("-"))
+							{
+								unchecked 
+								{
+									argument = (uint)Convert.ToInt32(argstring, 10);;
+								}
+							}
+							else
+								argument = Convert.ToUInt32(argstring, 10);
 						}
 					}
 
+					if(mnemonics.ContainsKey(mnemonic) == false)
+					{
+						throw new InvalidOperationException("Unknown mnemonic: " + mnemonic);
+					}
+					
 					var instruction = mnemonics[mnemonic];
 
 					foreach(var annotation in annotations)
@@ -258,41 +276,45 @@ namespace supervm_asm
 
 		static Dictionary<string, Instruction> mnemonics = new Dictionary<string, Instruction>()
 		{
-			{ "nop", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "push", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "drop", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "dup", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Peek, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "jmp", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
-			{ "jmpi", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
-			{ "ret", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
-			{ "load", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Load, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "loadi", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Load, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "store", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Pop, Command = Command.Store, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "storei", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Store, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "get", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Get, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "geti", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Get, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "set", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Pop, Command = Command.Set, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "seti", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Set, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "bpget", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.BpGet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "bpset", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.BpSet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "add", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "sub", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "cmp", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = true, Output = OutputType.Discard, Argument = 0,  } },
-			{ "mul", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 2, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "div", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 3, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "mod", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 4, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "and", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 5, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "or", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 6, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "xor", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 7, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "not", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Math, CommandInfo = 8, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "rol", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 9, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "ror", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 10, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "asl", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 11, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "asr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 12, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "shl", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 13, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "shr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 14, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
-			{ "syscall", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.SysCall, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
-			{ "hwio", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.HwIO, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "nop", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "push", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "drop", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "dup", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Peek, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "jmp", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
+{ "jmpi", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
+{ "ret", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Copy, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Jump, Argument = 0,  } },
+{ "load", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Load, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "loadi", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Load, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "store", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Pop, Command = Command.Store, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "storei", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Store, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "get", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Zero, Command = Command.Get, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "geti", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Get, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "set", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Argument, Input1 = InputType.Pop, Command = Command.Set, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "seti", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Set, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "bpget", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.BpGet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "bpset", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.BpSet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "spget", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.SpGet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "spset", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.SpSet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "cpget", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.CpGet, CommandInfo = 1, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "add", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "sub", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "cmp", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = true, Output = OutputType.Discard, Argument = 0,  } },
+{ "mul", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 2, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "div", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 3, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "mod", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 4, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "and", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 5, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "or", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 6, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "xor", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 7, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "not", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.Math, CommandInfo = 8, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "rol", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 9, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "ror", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 10, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "asl", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 11, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "asr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 12, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "shl", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 13, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "shr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 14, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+{ "syscall", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.SysCall, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+{ "hwio", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.HwIO, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+
 		};
 	}
 
@@ -420,7 +442,7 @@ namespace supervm_asm
 		Set = 4,
 		BpGet = 5,
 		BpSet = 6,
-		RstStack = 7,
+		CpGet = 7,
 		Math = 8,
 		SpGet = 9,
 		SpSet = 10,
