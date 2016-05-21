@@ -3,77 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Instruction code[] = 
-{
-	// { VM_EXEC_X, VM_EXEC_X, VM_INPUT_ZERO, VM_INPUT_ZERO, VM_CMD_COPY, 0, VM_FLAG_NO, VM_OUTPUT_DISCARD, 0 },
-	{ // push 0
-		VM_EXEC_X, 
-		VM_EXEC_X, 
-		VM_INPUT_ARG, 
-		VM_INPUT_ZERO, 
-		VM_CMD_COPY, 
-		0, 
-		VM_FLAG_NO, 
-		VM_OUTPUT_PUSH, 
-		0
-	},
-	{ // dup
-		VM_EXEC_X, 
-		VM_EXEC_X, 
-		VM_INPUT_PEEK, 
-		VM_INPUT_ZERO, 
-		VM_CMD_COPY, 
-		0, 
-		VM_FLAG_NO, 
-		VM_OUTPUT_PUSH, 
-		0
-	},
-	{ // cmp 10
-		VM_EXEC_X, 
-		VM_EXEC_X, 
-		VM_INPUT_ARG, 
-		VM_INPUT_POP, 
-		VM_CMD_MATH, 
-		VM_MATH_SUB, 
-		VM_FLAG_YES, 
-		VM_OUTPUT_DISCARD, 
-		10
-	},
-	{ // jmp 7
-		VM_EXEC_1,
-		VM_EXEC_X, 
-		VM_INPUT_ARG, 
-		VM_INPUT_ZERO, 
-		VM_CMD_COPY, 
-		0, 
-		VM_FLAG_NO, 
-		VM_OUTPUT_JUMP, 
-		7
-	},
-	{ // add 1
-		VM_EXEC_X,
-		VM_EXEC_X,
-		VM_INPUT_ARG, 
-		VM_INPUT_POP, 
-		VM_CMD_MATH, 
-		0,
-		VM_FLAG_NO,
-		VM_OUTPUT_PUSH, 
-		1
-	},
-	{ // jmp 1
-		VM_EXEC_X,
-		VM_EXEC_X, 
-		VM_INPUT_ARG, 
-		VM_INPUT_ZERO, 
-		VM_CMD_COPY, 
-		0, 
-		VM_FLAG_NO, 
-		VM_OUTPUT_JUMP, 
-		1
-	},
-};
-
 void dump_proc(Process *process)
 {
 	if(process->flags & VM_FLAG_Z)
@@ -85,6 +14,11 @@ void dump_proc(Process *process)
 		printf("n");
 	else
 		printf(" ");
+	
+	printf(
+		"%2d %2d ",
+		process->codePointer,
+		process->basePointer);
 
 	printf("[ ");
 	for(int i = 1; i <= process->stackPointer; i++) {
@@ -103,8 +37,43 @@ void vm_assert(int assertion, const char *msg)
 
 int main(int argc, const char **argv)
 {
-	Module module = { code, 6 };
-
+	if(argc < 2) {
+		printf("Usage: vm [binary]\n");
+		printf("  [binary]: The file to be executed.\n");
+		return 1;
+	}
+	Module module = { 0 };
+	{ // Read module
+		FILE *f = fopen(argv[1], "rb");
+		fseek(f, 0, SEEK_END);
+		size_t len = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		module.code = malloc(len);
+		module.length = len / sizeof(Instruction);
+		
+		char *ptr = (char*)module.code;
+		for(int p = 0; p < len; p += fread(&ptr[p], 1, sizeof(Instruction), f));
+		
+		fclose(f);
+	}
+	printf("Loaded module %s with %d instructions.\n", argv[1], module.length);
+	for(int i = 0; i < module.length; i++)
+	{
+		Instruction c = module.code[i];
+		printf(
+			"%3d: %10d %1d %1d %5d %3d %1d %1d %1d %1d\n", 
+			i,
+			c.argument,
+			c.output, 
+			c.flags, 
+			c.cmdinfo,
+			c.command,
+			c.input1,
+			c.input0,
+			c.execN,
+			c.execZ);
+	}
+	
 	Process process = { &module, 0, 0, 0, 0 };
 	Process *p = &process;
 	

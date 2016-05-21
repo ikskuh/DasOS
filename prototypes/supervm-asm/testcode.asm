@@ -1,8 +1,8 @@
 ﻿	push 0 ; Some comment
 loop:
 	dup
-	[f:yes] sub 10 [r:discard]
+	[i0:arg] sub 10 [f:yes] [r:discard]
 	[ex(z)=1] jmp @end
-	add 1
+	[i0:arg] add 1
 	jmp @loop
 end:
