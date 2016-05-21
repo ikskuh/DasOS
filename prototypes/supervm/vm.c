@@ -2,16 +2,6 @@
 
 #include <stdio.h>
 
-typedef struct 
-{
-	uint32_t input0;
-	uint32_t input1;
-	uint32_t argument;
-	uint32_t additional;
-	
-	uint32_t output;
-} CommandInfo;
-
 static void cmd_copy(CommandInfo *info)
 {
 	info->output = info->input0;
@@ -108,6 +98,8 @@ int vm_step_process(Process *process)
 		{
 			case VM_CMD_COPY: cmd_copy(&info); break;
 			case VM_CMD_MATH: cmd_math(&info); break;
+			case VM_CMD_SYSCALL: vm_syscall(process, &info); break;
+			case VM_CMD_HWIO: vm_hwio(process, &info); break;
 			default: vm_assert(0, "Invalid instruction: command undefined.");
 		}
 		

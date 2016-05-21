@@ -84,8 +84,8 @@ An instruction is only executed when all conditions are met.
 |  8 | MATH        | output = input0 OP[info] input1      |
 |  9 | SPGET       | output = SP + input0                 |
 | 10 | SPSET       | output = SP + input0 = input1        |
-| 11 |             |                                      |
-| 12 |             |                                      |
+| 11 | SYSCALL     | output = SysCall(input0, input1)     |
+| 12 | HWIO        | output = HardwareIO(input0, input1)  |
 | 13 |             |                                      |
 | 14 |             |                                      |
 | 15 |             |                                      |
@@ -115,37 +115,40 @@ by the `cmdinfo`.
 
 ## Assembler Mnemonics
 
-| Mnemonic | Arg? | i0   | i1   | Cmd   | CmdInfo  | Output  |
-|----------|------|------|------|-------|----------|---------|
-| nop      |   no | zero | zero | copy  | 0        | discard |
-| push     |  yes | arg  | zero | copy  | 0        | push    |
-| drop     |   no | pop  | zero | copy  | 0        | discard |
-| dup      |   no | peek | zero | copy  | 0        | push    |
-| jmp      |  yes | arg  | zero | copy  | 0        | jump    |
-| jmpi     |   no | pop  | zero | copy  | 0        | jump    |
-| ret      |   no | pop  | zero | copy  | 0        | jump    |
-| load     |  yes | arg  | zero | load  | 0        | push    |
-| loadi    |   no | pop  | zero | load  | 0        | push    |
-| store    |  yes | arg  | pop  | store | 0        | discard |
-| storei   |   no | pop  | pop  | store | 0        | discard |
-| get      |  yes | arg  | zero | get   | 0        | push    |
-| geti     |   no | pop  | zero | get   | 0        | push    |
-| set      |  yes | arg  | pop  | set   | 0        | discard |
-| seti     |   no | pop  | pop  | set   | 0        | discard |
-| bpget    |   no | zero | zero | bpget | 0        | push    |
-| bpset    |   no | pop  | zero | bpset | 0        | discard |
-| add      |   no | pop  | pop  | math  | 0        | push    |
-| sub      |   no | pop  | pop  | math  | 1        | push    |
-| mul      |   no | pop  | pop  | math  | 2        | push    |
-| div      |   no | pop  | pop  | math  | 3        | push    |
-| mod      |   no | pop  | pop  | math  | 4        | push    |
-| and      |   no | pop  | pop  | math  | 5        | push    |
-| or       |   no | pop  | pop  | math  | 6        | push    |
-| xor      |   no | pop  | pop  | math  | 7        | push    |
-| not      |   no | pop  | zero | math  | 8        | push    |
-| rol      |   no | pop  | pop  | math  | 9        | push    |
-| ror      |   no | pop  | pop  | math  | 10       | push    |
-| asl      |   no | pop  | pop  | math  | 11       | push    |
-| asr      |   no | pop  | pop  | math  | 12       | push    |
-| shl      |   no | pop  | pop  | math  | 13       | push    |
-| shr      |   no | pop  | pop  | math  | 14       | push    |
+| Mnemonic | Arg? | i0   | i1   | Cmd     | CmdInfo  | Output  | Flags? |
+|----------|------|------|------|---------|----------|---------|--------|
+| nop      |   no | zero | zero | copy    | 0        | discard | no     |
+| push     |  yes | arg  | zero | copy    | 0        | push    | no     |
+| drop     |   no | pop  | zero | copy    | 0        | discard | no     |
+| dup      |   no | peek | zero | copy    | 0        | push    | no     |
+| jmp      |  yes | arg  | zero | copy    | 0        | jump    | no     |
+| jmpi     |   no | pop  | zero | copy    | 0        | jump    | no     |
+| ret      |   no | pop  | zero | copy    | 0        | jump    | no     |
+| load     |  yes | arg  | zero | load    | 0        | push    | no     |
+| loadi    |   no | pop  | zero | load    | 0        | push    | no     |
+| store    |  yes | arg  | pop  | store   | 0        | discard | no     |
+| storei   |   no | pop  | pop  | store   | 0        | discard | no     |
+| get      |  yes | arg  | zero | get     | 0        | push    | no     |
+| geti     |   no | pop  | zero | get     | 0        | push    | no     |
+| set      |  yes | arg  | pop  | set     | 0        | discard | no     |
+| seti     |   no | pop  | pop  | set     | 0        | discard | no     |
+| bpget    |   no | zero | zero | bpget   | 0        | push    | no     |
+| bpset    |   no | pop  | zero | bpset   | 0        | discard | no     |
+| add      |   no | pop  | pop  | math    | 0        | push    | no     |
+| sub      |   no | pop  | pop  | math    | 1        | push    | no     |
+| cmp      |   no | pop  | pop  | math    | 1        | discard | yes    |
+| mul      |   no | pop  | pop  | math    | 2        | push    | no     |
+| div      |   no | pop  | pop  | math    | 3        | push    | no     |
+| mod      |   no | pop  | pop  | math    | 4        | push    | no     |
+| and      |   no | pop  | pop  | math    | 5        | push    | no     |
+| or       |   no | pop  | pop  | math    | 6        | push    | no     |
+| xor      |   no | pop  | pop  | math    | 7        | push    | no     |
+| not      |   no | pop  | zero | math    | 8        | push    | no     |
+| rol      |   no | pop  | pop  | math    | 9        | push    | no     |
+| ror      |   no | pop  | pop  | math    | 10       | push    | no     |
+| asl      |   no | pop  | pop  | math    | 11       | push    | no     |
+| asr      |   no | pop  | pop  | math    | 12       | push    | no     |
+| shl      |   no | pop  | pop  | math    | 13       | push    | no     |
+| shr      |   no | pop  | pop  | math    | 14       | push    | no     |
+| syscall  |  yes | zero | zero | syscall | 0        | discard | no     |
+| hwio     |  yes | zero | zero | hwio    | 0        | discard | no     |

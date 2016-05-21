@@ -35,6 +35,24 @@ void vm_assert(int assertion, const char *msg)
 	exit(1);
 }
 
+void vm_syscall(Process *p, CommandInfo *info)
+{
+	printf("Some syscall: (%d, %d, %d, %d)\n",
+		info->input0,
+		info->input1,
+		info->argument,
+		info->additional);
+}
+
+void vm_hwio(Process *p, CommandInfo *info)
+{
+	printf("Some hardware IO: (%d, %d, %d, %d)\n",
+		info->input0,
+		info->input1,
+		info->argument,
+		info->additional);
+}
+
 int main(int argc, const char **argv)
 {
 	if(argc < 2) {

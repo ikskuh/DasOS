@@ -32,6 +32,8 @@ extern "C" {
 #define VM_CMD_MATH     8
 #define VM_CMD_SPGET    9
 #define VM_CMD_SPSET    10
+#define VM_CMD_SYSCALL  11
+#define VM_CMD_HWIO     12
 
 #define VM_MATH_ADD 0
 #define VM_MATH_SUB 1
@@ -84,6 +86,7 @@ typedef struct
 typedef struct 
 {
 	Module *module;
+	void *tag;
 	
 	uint32_t codePointer;
 	uint32_t stackPointer;
@@ -92,6 +95,16 @@ typedef struct
 	
 	uint32_t stack[VM_STACKSIZE];
 } Process;
+
+typedef struct 
+{
+	uint32_t input0;
+	uint32_t input1;
+	uint32_t argument;
+	uint32_t additional;
+	
+	uint32_t output;
+} CommandInfo;
 
 /**
  * @brief Steps a given process.
@@ -118,7 +131,29 @@ uint32_t vm_pop(Process *process);
  */
 uint32_t vm_peek(Process *process);
 
+
+// The following functions need to be host-implemented.
+
+/**
+ * An assertion the VM does.
+ * @param assertion If zero, the assertion failed.
+ * @param msg       The message that should be shown when the assertion fails.
+ */
 void vm_assert(int assertion, const char *msg);
+
+/**
+ * The hosts syscall implementation.
+ * @param process The process that calls the syscall.
+ * @param info    Additional information for the syscall. Contains arguments and results.
+ */ 
+void vm_syscall(Process *process, CommandInfo *info);
+
+/**
+ * The hosts hardware IO implementation.
+ * @param process The process that wants to do IO.
+ * @param info    Additional information for the HWIO. Contains arguments and results.
+ */ 
+void vm_hwio(Process *process, CommandInfo *info);
 
 #if defined(__cplusplus)
 }
