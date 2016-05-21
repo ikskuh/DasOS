@@ -16,14 +16,56 @@ namespace supervm_asm
 		{
 			// MnemonicParser.GenerateFromDocumentation(@"D:\felix\projects\DasOS\prototypes\supervm\instructions.md");
 
-			var code = Assembler.Assemble(File.ReadAllText("testcode.asm"));
-
-			for (int i = 0; i < code.Length; i++)
+			foreach(var file in args.Where(a => !a.StartsWith("-") && Path.GetExtension(a) == ".asm"))
 			{
-				Console.Write("; {0:X3} ", i);
-				Console.Write(Convert.ToString((long)code[i], 2).PadLeft(64, '0'));
-				Console.WriteLine();
+				var output = Path.ChangeExtension(file, ".bin");
+				var code = Assembler.Assemble(File.ReadAllText("testcode.asm"));
+				
+				Console.WriteLine("{0}:", output);
+				for (int i = 0; i < code.Length; i++)
+				{
+					Console.Write("; {0:X3} ", i);
+					PrintInstruction(code[i]);
+				}
+				using(var fs = File.Open(output, FileMode.Create, FileAccess.Write))
+				{
+					for(int i = 0; i < code.Length; i++)
+					{
+						var bits = BitConverter.GetBytes(code[i]);
+						if(BitConverter.IsLittleEndian)
+						{
+							bits = bits.Reverse().ToArray();
+						}
+						fs.Write(bits, 0, bits.Length);
+					}
+				}
 			}
+		}
+		
+		static void PrintInstruction(ulong instr)
+		{
+			var str = Convert.ToString((long)instr, 2).PadLeft(64, '0');
+			
+			var portions = new []
+			{
+				new { Start = 0,  Length = 32, Color = ConsoleColor.Red },
+				new { Start = 32, Length = 2,  Color = ConsoleColor.Blue },
+				new { Start = 34, Length = 1,  Color = ConsoleColor.Green },
+				new { Start = 35, Length = 16, Color = ConsoleColor.Magenta },
+				new { Start = 51, Length = 8,  Color = ConsoleColor.Yellow },
+				new { Start = 59, Length = 1,  Color = ConsoleColor.DarkCyan },
+				new { Start = 60, Length = 2,  Color = ConsoleColor.Cyan },
+				new { Start = 62, Length = 2,  Color = ConsoleColor.DarkBlue },
+			};
+			
+			var fg = Console.ForegroundColor;
+			foreach(var portion in portions)
+			{
+				Console.ForegroundColor = portion.Color;
+				Console.Write("{0} ", str.Substring(portion.Start, portion.Length));
+			}
+			Console.ForegroundColor = fg;
+			Console.WriteLine();
 		}
 	}
 
@@ -123,10 +165,10 @@ namespace supervm_asm
 						switch (annotation)
 						{
 							case "f:yes":
-								instruction.ModifyFlags = false;
+								instruction.ModifyFlags = true;
 								break;
 							case "f:no":
-								instruction.ModifyFlags = true;
+								instruction.ModifyFlags = false;
 								break;
 							case "r:discard":
 								instruction.Output = OutputType.Discard;
