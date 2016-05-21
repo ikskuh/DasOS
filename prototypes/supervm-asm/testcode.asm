@@ -1,38 +1,51 @@
 ﻿
+	; Just print a "START" flag
 	[i0:arg] syscall [ci:1] 'S'
 
-	push 1
-	push 2
-	push 3
-	push 4
 
-	cpget
-	jmp @print_str
+	push 0 ; pushs string pointer argument
+	cpget  ; pushs return addr
+	jmp @print_str ; Calls print_str(0)
+	drop ; releases argument
 	
+	
+	; Print the "END" marker
 	[i0:arg] syscall [ci:1] 'Q'
 	
-	syscall [ci:0] ; Exit
+	; End the program
+	syscall [ci:0]
 	
-print_str:	
-	spget
-	bpset
+; void print_str(char *string);
+print_str:
+	spget ; enter function by
+	bpset ; saving the parents base pointer
 	
-	push 200
-	get -1
-	get -2
-	get -3
-	get -4
-	push 400
+	; char *ptr = string;
+	get -1 ; get argument 0 into our local variable '#1'
 	
-	get 1
+	; while(*ptr) {
+print_str_loop:
+	[i0:peek] loadi [f:yes] ; write flags, also load result, don't discard pointer
+	[ex(z)=1] jmp @print_str_end_loop ; when *ptr == 0, then goto print_str_end_loop
+	;		char c = *ptr; // which is implicitly done by our while(*ptr)
 	
-	push 600
+	;		putc(c);
+	[i0:pop] syscall [ci:1] ; removes the loaded character and prints it
 	
+	;		ptr++;
+	[i0:arg] add 1 ; adds 1 to the stack top
 	
+	;	}
+	jmp @print_str_loop
 	
-	bpget
-	spset
-	jmpi
+print_str_end_loop:
+	drop ; discard the result from loadi
+	drop ; discard our pointer
+	
+	; return
+	bpget ; leave function
+	spset ; by restoring parent base pointer
+	jmpi  ; and jumping back.
 	
 ;	load 0
 ;	load 1
