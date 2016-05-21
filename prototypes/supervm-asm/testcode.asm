@@ -1,4 +1,16 @@
-﻿	push 0 ; Some comment
+﻿
+
+
+
+
+
+
+
+
+
+
+
+	push 0 ; Some comment
 loop:
 	dup
 	[i0:arg] sub 10 [f:yes] [r:discard]
@@ -6,3 +18,4 @@ loop:
 	[i0:arg] add 1
 	jmp @loop
 end:
+	syscall 0 ; Exit

@@ -14,7 +14,7 @@ namespace supervm_asm
 
 		static void Main(string[] args)
 		{
-			// MnemonicParser.GenerateFromDocumentation(@"../supervm/instructions.md");
+			// MnemonicParser.GenerateFromDocumentation(@"../supervm/supervm.md");
 
 			foreach(var file in args.Where(a => !a.StartsWith("-") && Path.GetExtension(a) == ".asm"))
 			{
@@ -273,6 +273,7 @@ namespace supervm_asm
 			{ "bpset", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Zero, Command = Command.BpSet, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
 			{ "add", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
 			{ "sub", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+			{ "cmp", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 1, ModifyFlags = true, Output = OutputType.Discard, Argument = 0,  } },
 			{ "mul", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 2, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
 			{ "div", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 3, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
 			{ "mod", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 4, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
@@ -286,6 +287,8 @@ namespace supervm_asm
 			{ "asr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 12, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
 			{ "shl", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 13, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
 			{ "shr", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Pop, Input1 = InputType.Pop, Command = Command.Math, CommandInfo = 14, ModifyFlags = false, Output = OutputType.Push, Argument = 0,  } },
+			{ "syscall", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.SysCall, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
+			{ "hwio", new Instruction() { ExecutionZ = ExecutionMode.Always, ExecutionN = ExecutionMode.Always, Input0 = InputType.Zero, Input1 = InputType.Zero, Command = Command.HwIO, CommandInfo = 0, ModifyFlags = false, Output = OutputType.Discard, Argument = 0,  } },
 		};
 	}
 
@@ -317,7 +320,7 @@ namespace supervm_asm
 					Input1 = ToInputMode(a[3]),
 					Command = ToCommand(a[4]),
 					CommandInfo = ushort.Parse(a[5]),
-					ModifyFlags = false,
+					ModifyFlags = (a[7].ToLower() == "yes"),
 					Output = ToOutput(a[6]),
 					Argument = 0,
 				});
@@ -417,6 +420,8 @@ namespace supervm_asm
 		Math = 8,
 		SpGet = 9,
 		SpSet = 10,
+		SysCall = 11,
+		HwIO = 12,
 	}
 
 	public enum OutputType
