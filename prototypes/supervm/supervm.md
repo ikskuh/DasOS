@@ -3,6 +3,15 @@
 SuperVM is a stack machine with a simple, but flexible command
 set.
 
+## Purpose of this document
+
+This document is meant to give a complete overview over the concepts and abstract
+workings of SuperVM.
+
+It is targeted at uses who program SuperVM with the native assembly language,
+system programmers who want to include the virtual machine in their system or
+create their own SuperVM implementation.
+
 ## The Stack
 The virtual machine utilizes a stack to provide operands to instructions.
 This stack stores temporary values the program is working with.
@@ -201,9 +210,12 @@ Each instruction can emit an output value. The output can be used in the followi
 The instruction argument can provide static input which can be used
 as a value source for the first input value.
 
-## Assembler Mnemonics
+## Common Assembler Mnemonics
 
-| Mnemonic | Arg? | i0   | i1   | Cmd     | CmdInfo  | Output  | Flags? | Description                                                                                     |
+The following table lists a set of practial mnemonics for the use in an assembly language.
+Each mnemonic declares a specific configuration of an instruction.
+
+| Mnemonic | Arg? | i0   | i1   | Cmd     | CmdInfo  | Output  | Flags? | Description  1                                                                                   |
 |----------|------|------|------|---------|----------|---------|--------|-------------------------------------------------------------------------------------------------|
 | nop      |   no | zero | zero | copy    | 0        | discard | no     | Does noting                                                                                     |
 | push     |  yes | arg  | zero | copy    | 0        | push    | no     | Pushes its argument on the stack                                                                |
