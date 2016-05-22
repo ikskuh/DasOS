@@ -10,8 +10,6 @@ namespace supervm_asm
 {
 	class Program
 	{
-
-
 		static void Main(string[] args)
 		{
 			if(args.Contains("-gen-code"))
@@ -24,17 +22,19 @@ namespace supervm_asm
 			foreach(var file in args.Where(a => !a.StartsWith("-") && Path.GetExtension(a) == ".asm"))
 			{
 				var output = Path.ChangeExtension(file, ".bin");
-				var code = Assembler.Assemble(File.ReadAllText(file));
+				var assembly = Assembler.Assemble(File.ReadAllText(file));
 				
-				Console.WriteLine("{0}:", output);
-				for (int i = 0; i < code.Length; i++)
+				var code = assembly.Code;
+				
+				Console.WriteLine("{0}*{1}:", output, code.Count);
+				for (int i = 0; i < code.Count; i++)
 				{
-					Console.Write("; {0:X3} ", i);
-					PrintInstruction(code[i]);
+					Console.Write("; {0:D3} ", i);
+					PrintInstruction(code[i], assembly.Annotation[i]);
 				}
 				using(var fs = File.Open(output, FileMode.Create, FileAccess.Write))
 				{
-					for(int i = 0; i < code.Length; i++)
+					for(int i = 0; i < code.Count; i++)
 					{
 						var bits = BitConverter.GetBytes(code[i]);
 						if(BitConverter.IsLittleEndian == false)
@@ -47,7 +47,7 @@ namespace supervm_asm
 			}
 		}
 		
-		static void PrintInstruction(ulong instr)
+		static void PrintInstruction(ulong instr, string comment)
 		{
 			var str = Convert.ToString((long)instr, 2).PadLeft(64, '0');
 			
@@ -71,23 +71,39 @@ namespace supervm_asm
 				Console.Write("{0} ", str.Substring(portion.Start, portion.Length));
 			}
 			Console.ForegroundColor = fg;
-			Console.WriteLine();
+			Console.WriteLine(" {0}", comment);
 		}
 	}
 
+	public class VMAssembly
+	{
+		private readonly ulong[] code;
+		private readonly string[] origins;
+		
+		public VMAssembly(ulong[] code, string[] origins)
+		{
+			this.code = code;
+			this.origins = origins;
+		}
+		
+		public IReadOnlyList<ulong> Code => this.code;
+		public IReadOnlyList<string> Annotation => this.origins;
+	}
+	
 	public static class Assembler
 	{
 		static Regex annotationMatcher = new Regex(@"\[\s*(.*?)\s*\]", RegexOptions.Compiled);
 		static Regex labelMatcher = new Regex(@"^(\w+):\s*(.*)\s*$", RegexOptions.Compiled);
 		static Regex instructionMatcher = new Regex(@"(\w+)(?:\s+([@-]?\w+|'.'))?", RegexOptions.Compiled);
 
-		public static ulong[] Assemble(string src)
+		public static VMAssembly Assemble(string src)
 		{
 			var lines = src.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 			var patches = new Dictionary<int, string>();
 			var labels = new Dictionary<string, int>();
 
 			var code = new List<ulong>();
+			var source = new List<string>();
 			for (int i = 0; i < lines.Length; i++)
 			{
 				var line = lines[i].Trim();
@@ -96,6 +112,8 @@ namespace supervm_asm
 					if (idx >= 0)
 						line = line.Substring(0, idx);
 				}
+				
+				var uncommented = line;
 
 				{ // Process labels
 					var match = labelMatcher.Match(line);
@@ -256,6 +274,7 @@ namespace supervm_asm
 					encoded |= ((ulong)argument << 32);
 			
 					code.Add(encoded);
+					source.Add(uncommented);
 				}
 			}
 
@@ -270,7 +289,7 @@ namespace supervm_asm
 				}
 			}
 			
-			return code.ToArray();
+			return new VMAssembly(code.ToArray(), source.ToArray());
 		}
 
 

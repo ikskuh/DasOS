@@ -17,11 +17,13 @@
 	
 ; void print_str(char *string);
 print_str:
-	spget ; enter function by
-	bpset ; saving the parents base pointer
+	bpget ; enter function by
+	spget ; saving the parents base pointer
+	bpset ; and storing the current stack pointer
+	   
 	
 	; char *ptr = string;
-	get -1 ; get argument 0 into our local variable '#1'
+	get -2 ; get argument 0 into our local variable '#1'
 	
 	; while(*ptr) {
 print_str_loop:
@@ -45,4 +47,5 @@ print_str_end_loop:
 	; return
 	bpget ; leave function
 	spset ; by restoring parent base pointer
+	bpset
 	jmpi  ; and jumping back.

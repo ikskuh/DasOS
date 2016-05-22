@@ -12,15 +12,60 @@ It is targeted at uses who program SuperVM with the native assembly language,
 system programmers who want to include the virtual machine in their system or
 create their own SuperVM implementation.
 
-## The Stack
+## Concepts
+
+SuperVM is a virtual machine that emulates a 32 bit stack machine. Instead of utilizing
+registers operations take their operands from the stack and push their results to
+it.
+
+An instruction is split into two parts:
+The instruction configuration and the command. The command defines what operation should
+be performed (memory access, calculation, ...), whereas the configuration defines the
+behaviour of instruction (stack/flag-modifications).
+
+## Memory Areas
+The virtual machine has three separarated memory areas. Each area serves a specific
+purpose and should not overlap the others.
+
+### Code Memory
+The code memory contains an immutable block of code that is instruction indexable.
+Each instruction is 64 bit wide.
+
+### Stack Memory
 The virtual machine utilizes a stack to provide operands to instructions.
 This stack stores temporary values the program is working with.
+
+Each entry on the stack is an 32 bit value that is mostly interpreted as
+a pointer, an index or an unsigned or signed integer. It is also possible
+to store a 32bit IEEE floating point number on the stack.
+
+The size of the stack is defined by the implementation, but it should contain at
+least 1024 entries. This allows a fair recursive depth of 128 recursions with an average
+of 6 local variables per function call.
+
+### Data Memory
+SuperVM also provides a memory model that allows storing persistent data that is
+accessed by different parts of the code.
+The data memory is byte accessible and can be written or read.
+
+It is implementation defined how the memory is managed and accessible. It can be a
+sparse memory with different sections, it could utilize a software-implemented paging
+process or just be a flat chunk of memory.
+
+As most programs require a minimum of global variables, the data memory should be
+at least 16kB large.
+
+Every pointer that accesses data memory (e.g. via `store` and `load`) contains the 
+address of a byte in memory, starting with zero.
 
 ## Registers and Flags
 
 The SuperVM virtual machine is a stack machine, but has also some control
 registers that can be set with special instructions. The registers mainly
 control stack access or control flow.
+
+Each register has a size of 32 bits. Only exception is the flag register which
+contains a single bit per flag.
 
 | Mnemonic | Register      | Function                                        |
 |----------|---------------|-------------------------------------------------|
@@ -29,18 +74,26 @@ control stack access or control flow.
 |       CP | Code Pointer  | Stores the instruction which is executed next.  |
 |       FG | Flag Register | Stores the state of the flags.                  |
 
+Stack, Base and Code Pointer store indexes instead of actual memory addresses.
+This prevents the VM to execute invalid instructions as the code pointer
+always points to the start of an instruction.
+
+Unlike common on most of the current CPUs, the stack and base pointer are growing upwards,
+each push increments the stack pointer by one, each pop decrements it.
+
+All registers start initialized with a zero.
+
 ### Stack Pointer
 The stack pointer points to the top of the stack. Each `push` operation increases
 the stack pointer by one, each `pop` operation reduces it by one.
 
-### Base Pointer
+### Base Pointer and Function Calls
 The base pointer is a pointer that can be set to access the stack relative to it.
-The indended use is to create a stack frame with the base pointer by pushing the
-previous base pointer to the stack and setting the new base pointer to the current
-stack pointer.
+This relative access is done by the commands `get` and `set`.
 
-Returning a function with this mechanism is moving the stack pointer to the current
-base pointer, then popping the previous base pointer from the stack.
+The base pointer is designed to create stack frames for functions with local variables
+as it is not possible to access local variables on the stack with only push and pop
+operations.
 
 ### Code Pointer
 The code pointer contains the instruction which is executed next. Modifying the
@@ -73,6 +126,11 @@ An SuperVM instruction is composed of multiple components:
 The execution mode checks whether the instruction will be execution or not. The execution
 depends on the state of the flags. An `X` means "Don't care", a `0` means the flag must be
 cleared and a `1` means the flag must be set.
+
+| State | Binary Representation |
+| X     | 0b00                  |
+| 0     | 0b10                  |
+| 1     | 0b11                  |
 
 An instruction is only executed when all conditions are met.
 
@@ -255,3 +313,56 @@ Each mnemonic declares a specific configuration of an instruction.
 | shr      |   no | pop  | pop  | math    | 14       | push    | no     | TO BE SPECIFIED                                                                                 |
 | syscall  |  yes | zero | zero | syscall | 0        | discard | no     | Mnemonic for a generic syscall.                                                                 |
 | hwio     |  yes | zero | zero | hwio    | 0        | discard | no     | Mnemonic for a generic hwio.                                                                    |
+
+## Function Calls
+
+The following chapter defines the SuperVM calling convention. It is required that all
+functions conform to this convention.
+
+To call a function, it is required that the return address is pushed to the stack.
+After this, a jump is taken to the function address.
+
+	call:
+		push @returnPoint ; Pushing returnPoint as the return address
+		jmp @function     ; Jumps to the function
+	returnPoint:
+
+SuperVM provides the instruction `cpget` which pushes by default the address of the 
+second next instruction which resembles the code above. This behaviour allows position
+independent code:
+
+	call:
+		cpget         ; pushs implicit returnPoint
+		jmp @function ; Calls function
+
+Functions can now return by calling `ret` when the return address is on top of the stack.
+A simple function that does a system call may look like this:
+
+	function:
+		syscall
+		ret
+
+As most functions utilize local variables, a stack frame is required.
+Creating this stack frame is done by pushing the current base pointer, then
+setting the base pointer to the current stack pointer.
+
+	enter:
+		bpget ; Save current base pointer
+		spget ; Get current stack pointer
+		bpset ; Set new base pointer
+
+Returning a function with this mechanism is by setting the stack pointer to the current
+base pointer, then popping the previous base pointer from the stack.
+
+	leave:
+		bpget ; Get current base pointer
+		spset ; Restore stack saved at the beginning
+		bpset ; Restore previous base pointer
+		ret   ; and jumping back.
+
+This mechanism leaves the base pointer of the calling function intact and also provides
+a new base pointer for the current function.
+
+## TODO
+
+- 64 Bit arithmetic instructions

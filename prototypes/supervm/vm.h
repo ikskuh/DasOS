@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #if !defined(VM_STACKSIZE)
-#define VM_STACKSIZE 64
+#define VM_STACKSIZE 512
 #endif
 
 // Binary Encoding : (enabled, value)
