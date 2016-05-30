@@ -182,6 +182,9 @@ int vm_step_process(Process *process)
 			case VM_OUTPUT_DISCARD: break;
 			case VM_OUTPUT_PUSH: vm_push(process, info.output); break;
 			case VM_OUTPUT_JUMP: process->codePointer = info.output; break;
+			case VM_OUTPUT_JUMPR:
+				process->codePointer += *((int32_t*)&info.output); 
+				break;
 			default:
 				vm_assert(0, "Invalid instruction: invalid output.");
 		}
