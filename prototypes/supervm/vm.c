@@ -9,12 +9,31 @@ static void cmd_copy(CommandInfo *info)
 
 static void cmd_load(Process *p, CommandInfo *info)
 {
-	info->output = vm_read_byte(p, info->input0);
+	info->output = 0;
+	switch(info->additional) {
+		case 2:
+			info->output|=(uint32_t)(vm_read_byte(p, info->input0+3))<<24;
+			info->output|=(uint32_t)(vm_read_byte(p, info->input0+2))<<16;
+		case 1:
+			info->output|=(uint32_t)(vm_read_byte(p, info->input0+1))<< 8;
+		case 0:
+			info->output|=(uint32_t)(vm_read_byte(p, info->input0+0))<< 0;
+			break;
+	}
 }
 
 static void cmd_store(Process *p, CommandInfo *info)
 {
-	vm_write_byte(p, info->input0, info->input1);
+	switch(info->additional) {
+		case 2:
+			vm_write_byte(p, info->input0+3, info->input1>>24);
+			vm_write_byte(p, info->input0+2, info->input1>>16);
+		case 1:
+			vm_write_byte(p, info->input0+1, info->input1>>8);
+		case 0:
+			vm_write_byte(p, info->input0, info->input1);
+			break;
+	}
 	info->output = info->input1;
 }
 
