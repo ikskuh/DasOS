@@ -1,4 +1,4 @@
-# SuperVM
+﻿# SuperVM
 
 SuperVM is a stack machine with a simple, but flexible command
 set.
@@ -219,23 +219,24 @@ This allows a configuration such that the right hand side operand
 is taken by the argument of the instruction instead of beeing popped
 from the stack.
 
-| cmdinfo | Operation                   |
-|---------|-----------------------------|
-|       0 | Addition                    |
-|       1 | Subtraction                 |
-|       2 | Multiplication              |
-|       3 | Division                    |
-|       4 | Euclidean Division / Modulo |
-|       5 | Bitwise Logic And           |
-|       6 | Bitwise Logic Or            |
-|       7 | Bitwise Logic Xor           |
-|       8 | Bitwise Logic Not           |
-|       9 | Rotating Bit Shift Left     |
-|      10 | Rotating Bit Shift Right    |
-|      11 | Arithmetic Bit Shift Left   |
-|      12 | Arithmetic Bit Shift Right  |
-|      13 | Logic Bit Shift Left        |
-|      14 | Logic Bit Shift Right       |
+| cmdinfo | Operation                   | Forumla         |
+|---------|-----------------------------|-----------------|
+|       0 | Addition                    | input1 + input0 |
+|       1 | Subtraction                 | input1 - input0 |
+|       2 | Multiplication              | input1 * input0 |
+|       3 | Division                    | input1 / input0 |
+|       4 | Euclidean Division / Modulo | input1 % input0 |
+|       5 | Bitwise Logic And           | input1 ∧ input0 |
+|       6 | Bitwise Logic Or            | input1 ∨ input0 |
+|       7 | Bitwise Logic Xor           | input1 ⊻ input0 |
+|       8 | Bitwise Logic Not           | ˜input0         |
+|       9 | Rotating Bit Shift Left     | input1 ⊲ input0 |
+|      10 | Rotating Bit Shift Right    | input1 ⊳ input0 | 
+|      11 | Arithmetic Bit Shift Left   | input1 ≺ input0 |
+|      12 | Arithmetic Bit Shift Right  | input1 ≻ input0 |
+|      13 | Logic Bit Shift Left        | input1 « input0 |
+|      14 | Logic Bit Shift Right       | input1 » input0 |
+|      15 | Negation                    | -input0         |
 
 #### SpGet, SpSet
 These commands modify the stack pointer directly.
