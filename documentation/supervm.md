@@ -213,6 +213,12 @@ The math command is a compound operator that contains all
 ALU operations. The ALU operation is selected
 by the `cmdinfo`.
 
+If an ALU operation takes two operands, the right hand side is 
+defined by `input0`, the left hand side is defined by `input1`.
+This allows a configuration such that the right hand side operand
+is taken by the argument of the instruction instead of beeing popped
+from the stack.
+
 | cmdinfo | Operation                   |
 |---------|-----------------------------|
 |       0 | Addition                    |
@@ -258,11 +264,12 @@ is set when the highest bit is set.
 ### Output
 Each instruction can emit an output value. The output can be used in the following ways:
 
-| # | Output  | Effect                                                       |
-|---|---------|--------------------------------------------------------------|
-| 0 | discard | The output value is discarded.                               |
-| 1 | push    | The output is pushed to the stack.                           |
-| 2 | jump    | The code pointer is set to the output, thus a jump is taken. |
+| # | Output  | Effect                                                                      |
+|---|---------|-----------------------------------------------------------------------------|
+| 0 | discard | The output value is discarded.                                              |
+| 1 | push    | The output is pushed to the stack.                                          |
+| 2 | jump    | The code pointer is set to the output, thus a jump is taken.                |
+| 3 | jumpr   | The code pointer is increased by the output, thus a relative jump is taken. |
 
 ### Argument
 The instruction argument can provide static input which can be used
