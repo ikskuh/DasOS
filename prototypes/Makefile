@@ -5,4 +5,4 @@ all: $(PROJECTS)
 
 .PHONY: $(PROJECTS)
 $(PROJECTS):
-	make -C $@
+	make -C $@ $(ARGS)

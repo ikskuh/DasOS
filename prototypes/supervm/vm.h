@@ -5,6 +5,7 @@
 
 #if defined(__cplusplus)
 extern "C" {
+#define _Static_assert static_assert 
 #endif
 
 #if !defined(VM_STACKSIZE)
@@ -57,6 +58,7 @@ extern "C" {
 #define VM_OUTPUT_DISCARD 0
 #define VM_OUTPUT_PUSH    1
 #define VM_OUTPUT_JUMP    2
+#define VM_OUTPUT_JUMPR   3
 
 #define VM_FLAG_Z (1<<0)
 #define VM_FLAG_N (1<<1)
@@ -179,4 +181,5 @@ void vm_hwio(Process *process, CommandInfo *info);
 
 #if defined(__cplusplus)
 }
+#undef _Static_assert
 #endif

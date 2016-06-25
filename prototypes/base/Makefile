@@ -4,23 +4,27 @@ CC=gcc
 CXX=g++
 LD=ld
 
+LIBGCC = $(shell gcc -m32 -print-libgcc-file-name)
+LIBSTD = ../stdlib/libstd.a
+LIBVM = ../supervm/libvm.a
+
 IDT_DISPATCH = _ZN3IDT8dispatchEP8CpuState
 
-FLAGS = -mno-sse -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists -I../stdlib/include  -O3 -g
+INCLUDE_DIRS = ../stdlib/include ../supervm/
+
+FLAGS = -mno-sse -DIDT_DISPATCH=$(IDT_DISPATCH) -ffreestanding -m32 -Werror -Wall -iquote include -iquote lists $(addprefix -I, $(INCLUDE_DIRS)) -O3 -g
 ASFLAGS = $(FLAGS)
 CFLAGS = $(FLAGS)	
 CXXFLAGS = $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
 
 SRCS = $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
-
-LIBGCC = $(shell gcc -m32 -print-libgcc-file-name)
-LIBSTD = ../stdlib/libstd.a
+LIBS = $(LIBGCC) $(LIBSTD) $(LIBVM)
 
 all: kernel-base.ker
 
 kernel-base.ker: $(OBJS)
-	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^) $(LIBGCC) $(LIBSTD)
+	$(LD) -melf_i386 -Tlinker.ld -o kernel-base.ker $(addprefix obj/, $^) $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
@@ -46,8 +50,8 @@ kernel-base.ker: $(OBJS)
 # -initrd file    use 'file' as initial ram disk
 # -dtb    file    use 'file' as device tree image
 
-
 run:
+	echo `pwd`
 	qemu-system-i386 \
 		-kernel kernel-base.ker \
 		-m 64 \
@@ -55,7 +59,7 @@ run:
 		-no-reboot \
 		-no-shutdown \
 		-serial stdio \
-		-initrd ../program0/program 
+		-initrd `pwd`/../supervm-asm/testcode.bin
 
 insight:
 	objdump -d kernel-base.ker | c++filt | less
