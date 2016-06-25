@@ -149,6 +149,26 @@ void strcat(char *buffer, const char *text)
 	while((*(buffer++) = *text++)); // copy text
 }
 
+void putppm(int x, int y, unsigned char ppm[])
+{
+	auto *base = &ppm[15];
+	for(int py = 0; py < 300; py++)
+	{
+		for(int px = 0; px < 300; px++)
+		{
+			uint32_t pixel = 0;
+			
+			pixel |= (base[900 * py + 3 * px + 0] <<  0);
+			pixel |= (base[900 * py + 3 * px + 1] <<  8);
+			pixel |= (base[900 * py + 3 * px + 2] << 16);
+		
+			setpixel(x + px, y + py, pixel);
+		}
+	}
+}
+
+#include "picture.h"
+
 extern "C" void init(multiboot_info_t const & data)
 {
 	const char *msg = "You should not see this.";
@@ -196,6 +216,8 @@ extern "C" void init(multiboot_info_t const & data)
 	strcat(buffer, " / ");
 	toString(temp, 128, mib.pitch / 4, 10); strcat(buffer, temp);
 	print_str(16, 32, buffer);
+	
+	putppm(256, 16, Picture);
 	
 	write_com(0x3F8, 'B');
 	write_com(0x3F8, 'y');
