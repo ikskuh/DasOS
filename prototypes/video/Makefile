@@ -51,9 +51,9 @@ video.ker: $(OBJS)
 boot: image
 	qemu-system-i386 \
 		-fda boot.img \
-		-m 64 \
-		-d cpu_reset,int \
-		-serial stdio
+		-m 64 
+#		-serial stdio
+#		-d cpu_reset,int \
 #		-no-reboot \
 #		-no-shutdown \
 

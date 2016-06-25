@@ -50,6 +50,105 @@ struct ModeInfoBlock {
   uint16_t reserved2;
 } __attribute__((packed));
 
+#include "pixelschrift.h"
+
+static ModeInfoBlock mib;
+
+static void setpixel(int x, int y, uint32_t color)
+{
+	uint8_t *fb = (uint8_t*)mib.physbase;
+
+	fb[mib.pitch * y + 4 * x + 2] = (color >>  0) & 0xFF;
+	fb[mib.pitch * y + 4 * x + 1] = (color >>  8) & 0xFF;
+	fb[mib.pitch * y + 4 * x + 0] = (color >> 16) & 0xFF;
+}
+
+static char getDigit(uint32_t i)
+{
+  if(i >= 0 && i <= 9) {
+    return '0' + i;
+  }
+  return 'A' + (i-10);
+}
+
+static void print_str(int x, int y, const char *text)
+{
+	const unsigned char *base = &MagickImage[10]; // HACKS!
+	int cx = x;
+	int cy = y;
+	while(*text)
+	{
+		char c = *text++;
+		
+		int gx = c % 32;
+		int gy = 8 * (c / 32);
+		
+		for(int py = 0; py < 8; py++)
+		{
+			unsigned char row = base[32 * (gy+py) + gx];
+			for(int px = 0; px < 8; px++)
+			{
+				if((row & (1<<px)) == 0)
+					continue;
+				setpixel(cx + 6 - px, cy + py, 0xFFFFFF);
+			}
+		}
+		
+		cx += 6;
+		cy += 0;
+	
+	}
+}
+
+size_t toString(
+  char *buffer, 
+  size_t length, 
+  uint32_t number, 
+  uint32_t radix)
+{
+  if(length == 0) {
+    return 0;
+  }
+  if(number == 0) {
+    buffer[0] = '0';
+		buffer[1] = '\0';
+    return 1;
+  }
+
+  size_t len = 0;
+  while(number > 0)
+  {
+    buffer[len++] = getDigit(number % radix);
+    if(len >= length)
+      break;
+    number /= radix;
+  }
+  
+  int half = len / 2;
+  for(int i = 0; i < half; i++)
+  {
+    char c = buffer[i];
+    buffer[i] = buffer[len - i - 1];
+    buffer[len - i - 1] = c;
+  }
+	
+	buffer[len] = 0;
+  
+  return len;
+}
+
+void strcpy(char *dst, const char *src)
+{
+	while((*dst++ = *src++));
+}
+
+void strcat(char *buffer, const char *text)
+{
+	while(*buffer++); // scroll to buffer end
+	buffer--;
+	while((*(buffer++) = *text++)); // copy text
+}
+
 extern "C" void init(multiboot_info_t const & data)
 {
 	const char *msg = "You should not see this.";
@@ -58,27 +157,51 @@ extern "C" void init(multiboot_info_t const & data)
 		*(video++) = *msg++ | 0x0700;
 	}
 	
-	ModeInfoBlock *modeInfo = (ModeInfoBlock*)data.vbe_mode_info;
+	mib = *(ModeInfoBlock*)data.vbe_mode_info;
 	
-	uint8_t *fb = (uint8_t*)modeInfo->physbase;
-	
-	for(int y = 0; y < modeInfo->Yres; y++)
+	for(int y = 0; y < mib.Yres; y++)
 	{
-		for(int x = 0; x < modeInfo->Xres; x++)
+		for(int x = 0; x < mib.Xres; x++)
 		{
-			uint32_t r = (x * 384 / modeInfo->Xres);
-			uint32_t g = (y * 384 / modeInfo->Yres);
+			uint32_t r = x % 256;
+			uint32_t g = y % 256;
 			uint32_t b = 0x00;
 			
-			fb[modeInfo->pitch * y + 4 * x + 2] = r;
-			fb[modeInfo->pitch * y + 4 * x + 1] = g;
-			fb[modeInfo->pitch * y + 4 * x + 0] = b;
+			setpixel(x, y, r | (g << 8) | (b << 16));
 		}
 	}
 	
 	write_com(0x3F8, 'H');
 	write_com(0x3F8, 'i');
 	write_com(0x3F8, '\n');
+	
+	const char *str = (const char*)MagickImage;
+	while(*str) {
+		write_com(0x3F8, *str++);
+	}
+	write_com(0x3F8, '\n');
+	
+	print_str(16, 16, "Hello World!");
+	
+	char buffer[256];
+	char temp[128];
+	strcpy(buffer, "X: ");
+	toString(temp, 128, mib.Xres, 10); strcat(buffer, temp);
+	strcat(buffer, " Y: ");
+	toString(temp, 128, mib.Yres, 10); strcat(buffer, temp);
+	print_str(16, 24, buffer);
+	
+	strcpy(buffer, "Pitch: ");
+	toString(temp, 128, mib.pitch, 10); strcat(buffer, temp);
+	strcat(buffer, " / ");
+	toString(temp, 128, mib.pitch / 4, 10); strcat(buffer, temp);
+	print_str(16, 32, buffer);
+	
+	write_com(0x3F8, 'B');
+	write_com(0x3F8, 'y');
+	write_com(0x3F8, 'e');
+	write_com(0x3F8, '\n');
+	
 	
 	while(true);
 }
