@@ -3,6 +3,6 @@
 enum class Error
 {
 #define ERROR(num, ident, desc) ident = num,
-#include "errors.lst"
+#include "lists/errors.lst"
 #undef ERROR
 };

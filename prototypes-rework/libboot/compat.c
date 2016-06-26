@@ -2,8 +2,8 @@
 
 typedef void (*constructor)();
  
-constructor start_ctors;
-constructor end_ctors;
+extern constructor start_ctors;
+extern constructor end_ctors;
 
 void compat_call_ctors()
 {

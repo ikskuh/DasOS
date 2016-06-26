@@ -14,8 +14,8 @@ SECTIONS
     }
     .data ALIGN(4096) : {
         start_ctors = .;
-        KEEP(*( .init_array ));
-        KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
+        KEEP(*( .ctors ));
+        KEEP(*(SORT_BY_INIT_PRIORITY( .ctors.* )));
         end_ctors = .;
 
         start_dtors = .;

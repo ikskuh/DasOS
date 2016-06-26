@@ -58,9 +58,11 @@ public:
 	explicit Interrupt(Handler handler);
 };
 
+extern "C" CpuState * interrupt_dispatch(CpuState *cpu);
 
 class IDT
 {
+	friend CpuState * interrupt_dispatch(CpuState *cpu);
 public:
 	static const uint32_t length = 256;
 	
