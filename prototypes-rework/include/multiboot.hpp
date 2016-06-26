@@ -19,6 +19,8 @@
 
 #define MB_ASSERT_SIZE(type, len) static_assert(sizeof(type) == len, "multiboot::" #type " must be " #len " bytes large.")
 
+#include "vbe.hpp"
+
 namespace multiboot
 {
   template<typename T>
@@ -156,7 +158,7 @@ namespace multiboot
       const APMTable * apmTable;
       struct {
         uint32_t controlInfo;
-        uint32_t modeInfo;
+        vbe::ModeInfo const * modeInfo;
         uint16_t mode;
         uint16_t interfaceSegment;
         uint16_t interfaceOffset;
