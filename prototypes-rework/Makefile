@@ -10,12 +10,16 @@ KERNELS = $(filter-out lib%, $(PROJECTS))
 all: $(KERNELS) boot.img
 
 .PHONY: $(PROJECTS)
-$(KERNELS): $(LIBS)
+$(KERNELS): dirs $(LIBS)
 	make -C $@ $(ARGS)
 
-$(LIBS):
+$(LIBS): dirs
 	make -C $@ $(ARGS)
 
+dirs:
+	mkdir -p libs
+	mkdir -p kernels
+	
 boot.img: $(PROJECTS)
 	mformat -C -f 1440 -v VIDEO -i boot.img ::
 	mcopy -i boot.img \
