@@ -5,17 +5,6 @@
 
 #include <driver/video.hpp>
 
-// Prüft, ob man bereits schreiben kann
-static uint8_t is_transmit_empty(uint16_t base) {
-	return inb(base+5) & 0x20;
-}
- 
- // Byte senden
-static void write_com(uint16_t base, uint8_t chr) {
-	while (is_transmit_empty(base)==0);
-	outb(base,chr);
-}
-
 extern "C" void init(multiboot::Structure const & data)
 {
 	write_com(0x3F8, 'H');
