@@ -53,13 +53,13 @@ bool SerialPort::isReceiveEmpty() const
 	return (inb(this->mBase + LSR) & 1) == 0;
 }
 
-void SerialPort::write(uint8_t c)
+void SerialPort::write(char c)
 {
 	while (this->isTransmitEmpty() == false);
 	outb(this->mBase, c);
 }
 
-uint8_t SerialPort::read()
+char SerialPort::read()
 {
 	while (this->isReceiveEmpty());
 	return inb(this->mBase);

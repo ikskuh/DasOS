@@ -8,10 +8,7 @@
 extern "C" void init(multiboot::Structure const & data)
 {
 	SerialPort serial(SERIAL_COM1);
-
-	serial.write('H');
-	serial.write('i');
-	serial.write('\n');
+	serial << "Hi!\n";
 	
 	VideoScreen video(*data.vbe.modeInfo);
 	for(uint32_t y = 0; y < video.height(); y++)
@@ -21,6 +18,8 @@ extern "C" void init(multiboot::Structure const & data)
 			video(x,y) = COLOR(255, 0, 0);
 		}
 	}
+	
+	serial << "w=" << video.width() << " h=" << video.height() << "\n";
 	
 	while(true);
 }

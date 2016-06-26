@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <chardev.hpp>
 
 #define SERIAL_COM1 0x3F8
 #define SERIAL_COM2 0x2F8
@@ -16,7 +17,8 @@ enum class Partiy
 	Low  = 0x7,
 };
 
-class SerialPort
+class SerialPort : 
+	public CharacterDevice
 {
 private:
 	uint16_t mBase;
@@ -31,7 +33,7 @@ public:
 	
 	bool isReceiveEmpty() const;
 	
-	void write(uint8_t c);
+	void write(char c) override;
 	
-	uint8_t read();
+	char read();
 };
