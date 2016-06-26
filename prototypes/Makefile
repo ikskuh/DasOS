@@ -33,5 +33,8 @@ boot.img: $(PROJECTS)
 	syslinux boot.img
 	mdir -i boot.img ::
 
+deploy: $(KERNELS)
+	cp ./kernels/* /srv/tftp/
+	
 run: boot.img
 	qemu-system-i386 boot.img -serial stdio
