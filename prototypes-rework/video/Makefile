@@ -5,7 +5,7 @@
 include ../config.mk
 
 KERNEL = video.ker
-LIBS   = -lboot -lvideo
+LIBS   = -lboot -lvideo -lserial
 
 all: builddir $(KERNEL)
 
