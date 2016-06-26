@@ -1,20 +1,21 @@
-﻿# SuperVM
+﻿# SuperVM SPU Mark I
 
-SuperVM is a stack machine with a simple, but flexible command
-set.
+The *SPU Mark I* is a stack machine with a simple, but flexible command
+set. The abbreviation SPU stands for Stack Processing Unit, Mark I declares
+that it is the first version of the SPU.
 
 ## Purpose of this document
 
 This document is meant to give a complete overview over the concepts and abstract
-workings of SuperVM.
+workings of the *SPU Mark I*.
 
-It is targeted at uses who program SuperVM with the native assembly language,
+It is targeted at uses who program the *SPU Mark I* with the native assembly language,
 system programmers who want to include the virtual machine in their system or
-create their own SuperVM implementation.
+create their own *SPU Mark I* implementation.
 
 ## Concepts
 
-SuperVM is a virtual machine that emulates a 32 bit stack machine. Instead of utilizing
+*SPU Mark I* is a virtual CPU that emulates a 32 bit stack machine. Instead of utilizing
 registers operations take their operands from the stack and push their results to
 it.
 
@@ -44,23 +45,20 @@ least 1024 entries. This allows a fair recursive depth of 128 recursions with an
 of 6 local variables per function call.
 
 ### Data Memory
-SuperVM also provides a memory model that allows storing persistent data that is
-accessed by different parts of the code.
+*SPU Mark I* also provides a memory model that allows storing RAM data that is
+accessible by different parts of the code.
 The data memory is byte accessible and can be written or read.
 
 It is implementation defined how the memory is managed and accessible. It can be a
 sparse memory with different sections, it could utilize a software-implemented paging
 process or just be a flat chunk of memory.
 
-As most programs require a minimum of global variables, the data memory should be
-at least 16kB large.
-
 Every pointer that accesses data memory (e.g. via `store` and `load`) contains the 
 address of a byte in memory, starting with zero.
 
 ## Registers and Flags
 
-The SuperVM virtual machine is a stack machine, but has also some control
+The *SPU Mark I* is a stack machine, but has also some control
 registers that can be set with special instructions. The registers mainly
 control stack access or control flow.
 
@@ -108,7 +106,7 @@ code pointer is equivalent to a jump operation.
 
 ## Instructions
 
-An SuperVM instruction is composed of multiple components:
+An *SPU Mark I* instruction is composed of multiple components:
 
 | Component   | Range             | Size | Function                                 |
 |-------------|-------------------|------|------------------------------------------|
@@ -278,7 +276,7 @@ as a value source for the first input value.
 
 ## Function Calls
 
-The following chapter defines the SuperVM calling convention. It is required that all
+The following chapter defines the *SPU Mark I* calling convention. It is required that all
 functions conform to this convention.
 
 To call a function, it is required that the return address is pushed to the stack.
@@ -289,7 +287,7 @@ After this, a jump is taken to the function address.
 		jmp @function     ; Jumps to the function
 	returnPoint:
 
-SuperVM provides the instruction `cpget` which pushes by default the address of the 
+*SPU Mark I* provides the instruction `cpget` which pushes by default the address of the 
 second next instruction which resembles the code above. This behaviour allows position
 independent code:
 
