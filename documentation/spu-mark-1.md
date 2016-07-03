@@ -1,4 +1,4 @@
-﻿# SuperVM SPU Mark I
+# SuperVM SPU Mark I
 
 The *SPU Mark I* is a stack machine with a simple, but flexible command
 set. The abbreviation SPU stands for Stack Processing Unit, Mark I declares
@@ -65,12 +65,13 @@ control stack access or control flow.
 Each register has a size of 32 bits. Only exception is the flag register which
 contains a single bit per flag.
 
-| Mnemonic | Register      | Function                                        |
-|----------|---------------|-------------------------------------------------|
-|       SP | Stack Pointer | Stores the current 'top' position of the stack. |
-|       BP | Base Pointer  | Stores the current stack frame position.        |
-|       CP | Code Pointer  | Stores the instruction which is executed next.  |
-|       FG | Flag Register | Stores the state of the flags.                  |
+| Mnemonic | Register           | Function                                        |
+|----------|--------------------|-------------------------------------------------|
+|       SP | Stack Pointer      | Stores the current 'top' position of the stack. |
+|       BP | Base Pointer       | Stores the current stack frame position.        |
+|       CP | Code Pointer       | Stores the instruction which is executed next.  |
+|       FG | Flag Register      | Stores the state of the flags.                  |
+|     INTR | Interrupt Register | Interrupt Handling, see below.                  |
 
 Stack, Base and Code Pointer store indexes instead of actual memory addresses.
 This prevents the VM to execute invalid instructions as the code pointer
@@ -98,11 +99,23 @@ The code pointer contains the instruction which is executed next. Modifying the
 code pointer is equivalent to a jump operation.
 
 ### Flag Register
+This register holds the state of the SPU.
 
-| Bit | Flag     | Option                          |
-|-----|----------|---------------------------------|
-|   0 | Zero     | Is set when the output is zero. |
-|   1 | Negative | Is set when the MSB is set.     |
+| Bit | Flag               | Option                                   |
+|-----|--------------------|------------------------------------------|
+|   0 | Zero               | Is set when the output is zero.          |
+|   1 | Negative           | Is set when the MSB is set.              |
+|   2 | Interrupts Enabled | When set, interrupt handling is enabled. | 
+
+### Interrupt Register
+This register stores the interrupt which should be triggered next.
+An interrupt is triggered when the interrupt register is not zero.
+
+When an interrupt is triggered, the current Code Pointer is pushed and the
+SPU jumps to the instruction defined in the interrupt register and the interrupt
+register is reset to zero.
+This allows a flexible interrupt range with the maximum interrupt number beeing
+implementation defined.
 
 ## Instructions
 
@@ -126,6 +139,7 @@ depends on the state of the flags. An `X` means "Don't care", a `0` means the fl
 cleared and a `1` means the flag must be set.
 
 | State | Binary Representation |
+|-----|------|
 | X     | 0b00                  |
 | 0     | 0b10                  |
 | 1     | 0b11                  |
@@ -177,6 +191,9 @@ processed further.
 | 10 | SPSET       | output = SP + input0 = input1        | Sets the current stack pointer.                        |
 | 11 | SYSCALL     | output = SysCall(input0, input1)     | Calls an OS dependend operation.                       |
 | 12 | HWIO        | output = HardwareIO(input0, input1)  | Calls an abstract hardware operation.                  |
+| 13 | INT         | output = INTR = input0               | Sets the interrupt register.                           |
+| 14 | SEI         | FG |=  (1<<2)                        | Sets the interrupt enabled flag.                       |
+| 15 | CLI         | FG &= ~(1<<2)                        | Clears the interrupt enabled flag.                     |
 
 #### Copy
 This command just copies the first input value to the output value. It
@@ -249,6 +266,15 @@ the host.
 This command also provides an interface to the executiing host system,
 but is focused on hardware IO. The effects, parameters and results are
 also defined by the host.
+
+#### Int
+This commands sets the interrupt register which allows software interrupts.
+
+#### Sei
+Sets the interrupt enabled flag.
+
+#### Cli
+Clears the interrupt enabled flag.
 
 ### Command Info
 The `cmdinfo` part of the instruction is passed to the executing command
