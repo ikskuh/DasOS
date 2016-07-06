@@ -1,45 +1,158 @@
-# Common Assembler Mnemonics
+# Assembler Mnemonics
 
-The following table lists a set of practial mnemonics for the use in an assembly language.
-Each mnemonic declares a specific configuration of an instruction.
+## nop
+Does nothing.
 
-| Mnemonic | Arg? | i0   | i1   | Cmd     | CmdInfo  | Output  | Flags? | Description  1                                                                                   |
-|----------|------|------|------|---------|----------|---------|--------|-------------------------------------------------------------------------------------------------|
-| nop      |   no | zero | zero | copy    | 0        | discard | no     | Does noting                                                                                     |
-| push     |  yes | arg  | zero | copy    | 0        | push    | no     | Pushes its argument on the stack                                                                |
-| drop     |   no | pop  | zero | copy    | 0        | discard | no     | Removes the top value from the stack                                                            |
-| dup      |   no | peek | zero | copy    | 0        | push    | no     | Duplicates the top value on the stack.                                                          |
-| jmp      |  yes | arg  | zero | copy    | 0        | jump    | no     | Jumps to its argument.                                                                          |
-| jmpi     |   no | pop  | zero | copy    | 0        | jump    | no     | Pops a value from the stack and jumps to it.                                                    |
-| ret      |   no | pop  | zero | copy    | 0        | jump    | no     | Pops a value from the stack and jumps to it.                                                    |
-| load     |  yes | arg  | zero | load    | 0        | push    | no     | Loads the value located at the argument from memory.                                            |
-| loadi    |   no | pop  | zero | load    | 0        | push    | no     | Pops an address from the stack and loads the value from memory.                                 |
-| store    |  yes | arg  | pop  | store   | 0        | discard | no     | Pops a value and stores it in memory at the argument address.                                   |
-| storei   |   no | pop  | pop  | store   | 0        | discard | no     | First, pops an address from the stack, then a value. Stores the value at the address.           |
-| get      |  yes | arg  | zero | get     | 0        | push    | no     | Pushes the value at the given base pointer offset at the stack.                                 |
-| geti     |   no | pop  | zero | get     | 0        | push    | no     | Pops an offset from the stack, then pushes the value at the popped base pointer offset.         |
-| set      |  yes | arg  | pop  | set     | 0        | discard | no     | Pops a value from the stack and copies it to the given stack offset.                            |
-| seti     |   no | pop  | pop  | set     | 0        | discard | no     | Pops an offset from the stack, then a value. Stores the value at the given offset on the stack. |
-| bpget    |   no | zero | zero | bpget   | 0        | push    | no     | Pushes the current base pointer.                                                                |
-| bpset    |   no | pop  | zero | bpset   | 0        | discard | no     | Pops a value and sets the base pointer.                                                         |
-| spget    |   no | zero | zero | spget   | 0        | push    | no     | Pushes the current stack pointer.                                                               |
-| spset    |   no | pop  | zero | spset   | 0        | discard | no     | Pops a value and sets the stack pointer.                                                        |
-| cpget    |   no | zero | zero | cpget   | 1        | push    | no     | Pushes the address of the second-next instruction.                                              |
-| add      |   no | pop  | pop  | math    | 0        | push    | no     | Pops two values and pushes the sum.                                                             |
-| sub      |   no | pop  | pop  | math    | 1        | push    | no     | Pops two values and pushes the difference.                                                      |
-| cmp      |   no | pop  | pop  | math    | 1        | discard | yes    | Pops two values and subtracts them. Discards the result, but modifies the flags.                |
-| mul      |   no | pop  | pop  | math    | 2        | push    | no     | Pops two values and pushes the product.                                                         |
-| div      |   no | pop  | pop  | math    | 3        | push    | no     | Pops two values and pushes the quotient.                                                        |
-| mod      |   no | pop  | pop  | math    | 4        | push    | no     | Pops two values and pushes the euclidean quotient.                                              |
-| and      |   no | pop  | pop  | math    | 5        | push    | no     | Pops two values and pushes the bitwise and.                                                     |
-| or       |   no | pop  | pop  | math    | 6        | push    | no     | Pops two values and pushes the bitwise or.                                                      |
-| xor      |   no | pop  | pop  | math    | 7        | push    | no     | Pops two values and pushes the exclusive or.                                                    |
-| not      |   no | pop  | zero | math    | 8        | push    | no     | Pops a single value and pushes the bitwise not                                                  |
-| rol      |   no | pop  | pop  | math    | 9        | push    | no     | TO BE SPECIFIED                                                                                 |
-| ror      |   no | pop  | pop  | math    | 10       | push    | no     | TO BE SPECIFIED                                                                                 |
-| asl      |   no | pop  | pop  | math    | 11       | push    | no     | TO BE SPECIFIED                                                                                 |
-| asr      |   no | pop  | pop  | math    | 12       | push    | no     | TO BE SPECIFIED                                                                                 |
-| shl      |   no | pop  | pop  | math    | 13       | push    | no     | TO BE SPECIFIED                                                                                 |
-| shr      |   no | pop  | pop  | math    | 14       | push    | no     | TO BE SPECIFIED                                                                                 |
-| syscall  |  yes | zero | zero | syscall | 0        | discard | no     | Mnemonic for a generic syscall.                                                                 |
-| hwio     |  yes | zero | zero | hwio    | 0        | discard | no     | Mnemonic for a generic hwio.                                                                    |
+## push
+Pushes $arg on the stack.
+
+## drop
+Removes the top value from the stack.
+
+## dup
+Duplicates the top value of the stack.
+
+## jmp
+Jumps to the command at index $arg.
+
+## jmpi
+Pops an index from the stack and jumps to it.
+
+## ret
+Returns from a function. Is exactly the same as `jmpi`, but is ment for returning from a function instead of an indirected jump.
+
+## load8
+Loads a byte (8 bit) from $arg.
+
+## load16
+Loads a half world (16 bit) from $arg.
+
+## load32
+Loads a word (32 bit) from $arg.
+
+## load8i
+Pops an address from the stack and loads the byte (8 bit) located at the popped address.
+
+## load16i
+Pops an address from the stack and loads the half world (16 bit) located at the popped address.
+
+## load32i
+Pops an address from the stack and loads the word (32 bit) located at the popped address.
+
+## store8
+Pops a value and stores it as a byte (8 bit) at $arg.
+
+## store16
+Pops a value and stores it as a half word (16 bit) at $arg.
+
+## store32
+Pops a value and stores the word (32 bit) at $arg.
+
+## store8i
+First pops an address from the stack, then a value. Then stores the value as a byte (8 bit) at the popped address.
+
+## store16i
+First pops an address from the stack, then a value. Then stores the value as a half word (16 bit) at the popped address.
+
+## store32i
+First pops an address from the stack, then a value. Then stores the value (32 bit) at the popped address.
+
+## get
+
+
+## geti
+
+
+## set
+
+
+## seti
+
+
+## bpget
+Pushes the current base pointer to the stack.
+
+## bpset
+Pops a value into the base pointer.
+
+## spget
+Pushes the current stack pointer to the stack.
+
+## spset
+Pops a value into the stack pointer.
+
+## cpget
+Pushes the current code pointer incremented by one. This allows pushing return values for function calls.
+
+## add
+
+
+## sub
+
+
+## cmp
+
+
+## cmpi
+
+
+## mul
+
+
+## div
+
+
+## mod
+
+
+## and
+
+
+## or
+
+
+## xor
+
+
+## not
+
+
+## rol
+
+
+## ror
+
+
+## asl
+
+
+## asr
+
+
+## shl
+
+
+## shr
+
+
+## syscall
+
+
+## hwio
+
+
+## int
+Raises the interrupt $arg.
+
+## sei
+Sets the interrupt flag and thus enables interrupts.
+
+## cli
+Clears the interrupt flag and thus disables interrupts.
+
+## in
+Reads a word from the port $arg.
+
+## out
+Pops a word and writes it to the port $arg.
+
