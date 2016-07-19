@@ -1,9 +1,11 @@
 #include <stdint.h>
 #include <new>
+#include <string.h>
 #include "multiboot.hpp"
 #include "pmm.hpp"
 #include "vmm.hpp"
 #include "console.hpp"
+#include "elf.hpp"
 
 VMMContext * kernelContext;
 
@@ -16,6 +18,8 @@ void initialize_pmm(multiboot::Structure const & mb);
 
 void initialize_vmm();
 
+void load_elf(multiboot::Module const & module);
+
 extern "C" void init(multiboot::Structure const & mb)
 {
 	initialize_pmm(mb);
@@ -26,7 +30,65 @@ extern "C" void init(multiboot::Structure const & mb)
 		<< "LowMem:  " << LOWMEM << "\n"
 		<< "HighMem: " << HIGHMEM << "\n";
 	
+	if(mb.modules.length == 0) {
+		Console::main << "No multiboot modules found.\n";
+		return;
+	}
+	
+	multiboot::Module const & module = mb.modules[0];
+	
+	Console::main << "Loading module: " << module.name << "\n";
+	
+	load_elf(module);
+	
+	Console::main << "Starting program...\n";
+	{
+		typedef void (*mainfunction)(void);
+		
+		mainfunction main = (mainfunction)LOWMEM;
+		main();
+	}
+	Console::main << "Program finished.\n";
+	
 	while(1);
+}
+
+void load_elf(multiboot::Module const & module)
+{
+	elf::Header const &file = *module.start.data<elf::Header const>();
+	if(file.magic != elf::MAGIC)
+	{
+		Console::main << "Invalid ELF magic.\n";
+		return;
+	}
+	Console::main << "ELF Version: " << file.version << "\n";
+	
+	
+	elf::ProgramHeader const *header  = (elf::ProgramHeader const *)(module.start.numeric() + file.ph_offset);
+	
+	for(uint32_t i = 0; i < file.ph_entry_count; i++, header++) {
+	
+		Console::main 
+			<< "Program Header " << (uint32_t)i << ": " 
+			<< header->type << ", "
+			<< header->virt_addr << "@" << header->offset
+			<< "\n";
+		/* Nur Program Header vom Typ LOAD laden */
+		if (header->type != 1) {
+				continue;
+		}
+		
+		if(header->virt_addr < LOWMEM) {
+			Console::main << "ELF Section below LOWMEM, skipping...\n";
+			continue;
+		}
+	
+		void* dest = (void*)header->virt_addr;
+		void* src = ((char*)&file) + header->offset;
+		
+		memset(dest, 0, header->mem_size);
+		memcpy(dest, src, header->file_size);
+	}
 }
 
 void initialize_vmm()

@@ -1,5 +1,8 @@
 
-all: kernel
+all: kernel user
 
 kernel: ./kernel/
-	$(MAKE) -C $@
+	$(MAKE) -C $@ -B
+	
+user: ./user/
+	$(MAKE) -C $@ -B
