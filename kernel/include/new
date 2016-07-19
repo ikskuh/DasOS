@@ -1,0 +1,29 @@
+#ifndef _NEW
+#define _NEW
+
+#include <stddef.h>
+
+#pragma GCC visibility push(default)
+
+extern "C++" {
+void* operator new(size_t)    __attribute__((__externally_visible__));
+void* operator new[](size_t)  __attribute__((__externally_visible__));
+void operator delete(void*)   __attribute__((__externally_visible__));
+void operator delete[](void*) __attribute__((__externally_visible__));
+
+#if __cpp_sized_deallocation
+void operator delete(void*, size_t)   __attribute__((__externally_visible__));
+void operator delete[](void*, size_t) __attribute__((__externally_visible__));
+#endif
+
+// Default placement versions of operator new.
+inline void* operator new(size_t, void* __p)  { return __p; }
+inline void* operator new[](size_t, void* __p) { return __p; }
+
+// Default placement versions of operator delete.
+inline void operator delete  (void*, void*) { }
+inline void operator delete[](void*, void*) { }
+
+} // extern "C++"
+
+#endif

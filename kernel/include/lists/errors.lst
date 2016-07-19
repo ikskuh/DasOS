@@ -1,0 +1,7 @@
+ERROR(0, Success,                Nothing went wrong. This should never encounter.)
+ERROR(1, OutOfMemory,            The system has run out of memory.)
+ERROR(2, UnhandledException,     An unhandled exception has occurred.)
+ERROR(3, UnhandledInterrupt,     An unhandled interrupt has occurred.)
+ERROR(4, DriverAlreadyInstalled, A driver was already installed.)
+ERROR(5, InvalidELFImage,        The file beeing loaded is not a valid ELF file.)
+ERROR(6, VMError,                The virtual machine has failed.)
