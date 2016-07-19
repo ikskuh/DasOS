@@ -9,8 +9,8 @@ VMMContext * kernelContext;
 
 uint16_t *video = (uint16_t*)0xB8000;
 
-uint32_t lowmem;
-uint32_t highmem;
+uint32_t LOWMEM;
+uint32_t HIGHMEM;
 
 void initialize_pmm(multiboot::Structure const & mb);
 
@@ -21,6 +21,10 @@ extern "C" void init(multiboot::Structure const & mb)
 	initialize_pmm(mb);
 	
 	initialize_vmm();
+	
+	Console::main
+		<< "LowMem:  " << LOWMEM << "\n"
+		<< "HighMem: " << HIGHMEM << "\n";
 	
 	while(1);
 }
@@ -43,16 +47,16 @@ void initialize_vmm()
 		
 	uint32_t userspace_size = 4096; // 16 MB?
 	
-	lowmem = 0x40000000;
-	highmem = 0x40000000;
+	LOWMEM = 0x40000000;
+	HIGHMEM = 0x40000000;
 	for(uint32_t i = 0; i < userspace_size; i++) {
 		
 		kernelContext->map(
-			virtual_t(highmem),
+			virtual_t(HIGHMEM),
 			PMM::alloc(),
 			VMMFlags::Writable);
 		
-		highmem += 0x1000;
+		HIGHMEM += 0x1000;
 	}
 		
 	Console::main << "Active Context...\n";
@@ -61,7 +65,6 @@ void initialize_vmm()
 	Console::main << "Active Paging...\n";
 	VMM::enable();
 }
-
 
 struct marker;
 

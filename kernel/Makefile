@@ -19,10 +19,13 @@ LDFLAGS  += -L../libs/ -lgcc
 SRCS += $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS += $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
-all: dirs $(KERNEL)
+all: dirs $(KERNEL) symbols
 
 dirs:
 	mkdir -p obj
+	
+symbols: $(KERNEL)
+	nm DasOS | sed -r "s|(\w+)\s+(\w+)\s+(\w+)|\3 = \1;|" | grep -E "^\w+ = \w+;$$" > DasOS.syms
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
