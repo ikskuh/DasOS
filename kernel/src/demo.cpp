@@ -57,6 +57,100 @@ struct KeyHit
 	KeyHitFlags flags;
 };
 
+const char *keycodes[] = {
+	"NUL/INVALID",
+	"ESCAPE",
+	"1",
+	"2",
+	"3",
+	"4",
+	"5",
+	"6",
+	"7",
+	"8",
+	"9",
+	"0",
+	"\\",
+	"`",
+	"BACKSPACE",
+	"TAB",
+	"q",
+	"w",
+	"e",
+	"r",
+	"t",
+	"z",
+	"u",
+	"i",
+	"o",
+	"p",
+	"ü",
+	"+",
+	"ENTER",
+	"CTRL-LEFT",
+	"a",
+	"s",
+	"d",
+	"f",
+	"g",
+	"h",
+	"j",
+	"k",
+	"l",
+	"ö",
+	"ä",
+	"^",
+	"SHIFT-LEFT",
+	"#",
+	"y",
+	"x",
+	"c",
+	"v",
+	"b",
+	"n",
+	"m",
+	",",
+	".",
+	"-",
+	"SHIFT-RIGHT",
+	"*",
+	"ALT-LEFT",
+	"SPACE",
+	"CAPS-LOCK",
+	"F1",
+	"F2",
+	"F3",
+	"F4",
+	"F5",
+	"F6",
+	"F7",
+	"F8",
+	"F9",
+	"F10",
+	"69",
+	"70",
+	"NUM-7",
+	"NUM-8",
+	"NUM-9",
+	"NUM-MINUS",
+	"NUM-4",
+	"NUM-5",
+	"NUM-6",
+	"NUM-PLUS",
+	"NUM-1",
+	"NUM-2",
+	"NUM-3",
+	"NUM-0",
+	"NUM-DOT",
+	"84",
+	"85",
+	"86",
+	"F11",
+	"F12",
+	"89",
+	"90",
+};
+
 void kbd_intr(CpuState * & cpu)
 {
 	int break_code = 0;
@@ -116,10 +210,14 @@ void kbd_intr(CpuState * & cpu)
 	}
 	if(scancode.set >= 0) {
 		if(break_code) {
-			Console::main << "Release " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set << "\n";
+			// Console::main << "Release " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set << "\n";
 		}
 		else {
-			Console::main << "Hit     " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set << "\n";
+			Console::main << "Hit     " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set;
+			if(scancode.set == 0 && scancode.code < sizeof(keycodes) / sizeof(keycodes[0])) {
+				Console::main << "::" << keycodes[scancode.code];
+			}
+			Console::main << "\n";
 		}
 	}
 }
