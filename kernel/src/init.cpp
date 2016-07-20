@@ -6,6 +6,8 @@
 #include "vmm.hpp"
 #include "console.hpp"
 #include "elf.hpp"
+#include "idt.hpp"
+#include "gdt.hpp"
 
 VMMContext * kernelContext;
 
@@ -20,9 +22,15 @@ void initialize_vmm();
 
 void load_elf(multiboot::Module const & module);
 
+void dasos_demo();
+
 extern "C" void init(multiboot::Structure const & mb)
 {
 	initialize_pmm(mb);
+	
+	GDT::initialize();
+	
+	IDT::initialize();
 	
 	initialize_vmm();
 	
@@ -31,7 +39,8 @@ extern "C" void init(multiboot::Structure const & mb)
 		<< "HighMem: " << HIGHMEM << "\n";
 	
 	if(mb.modules.length == 0) {
-		Console::main << "No multiboot modules found.\n";
+		Console::main << "No multiboot modules found, starting demo...\n";
+		dasos_demo();
 		return;
 	}
 	
