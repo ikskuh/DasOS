@@ -70,6 +70,8 @@ enum class VKey
 	NumpadMult,
 	NumpadDot,
 	Numpad0, Numpad1, Numpad2, Numpad3, Numpad4, Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
+	
+	LIMIT,
 };
 
 #define KBD_DEBUG
@@ -117,32 +119,32 @@ struct Key
 
 const Key keymap_set0[] = {
 	DEFKEY( "NUL/INVALID", Invalid, 0, 0, 0 ),
-	DEFKEY(  "ESCAPE", Escape, 0, 0, 0 ),
-	DEFKEY(  "1", D1, '1', '!', 0 ),
-	DEFKEY(  "2", D2, '2', '\"', 0 ),
-	DEFKEY(  "3", D3, '3', 0, 0 ),
-	DEFKEY(  "4", D4, '4', '$', 0 ),
-	DEFKEY(  "5", D5, '5', '%', 0 ),
-	DEFKEY(  "6", D6, '6', '&', 0 ),
-	DEFKEY(  "7", D7, '7', '/', '{' ),
-	DEFKEY(  "8", D8, '8', '(', '[' ),
-	DEFKEY(  "9", D9, '9', ')', ']' ),
-	DEFKEY(  "0", D0, '0', '=', '}' ),
-	DEFKEY(  "\\", Invalid, 0, '?', '\\' ), // TODO: Add virtual key code
-	DEFKEY(  "`", Invalid, '\'', '`', 0 ), // TODO: Add virtual key code
-	DEFKEY(  "BACKSPACE", Backspace, 8, 8, 8 ),
-	DEFKEY(  "TAB", Tab, 9, 9, 9 ),
-	DEFKEY(  "Q", Q, 'q', 'Q', '@' ),
-	DEFKEY(  "W", W, 'w', 'W', 0 ),
-	DEFKEY(  "E", E, 'e', 'E', 0 ),
-	DEFKEY(  "R", R, 'r', 'R', 0 ),
-	DEFKEY(  "T", T, 't', 'T', 0 ),
-	DEFKEY(  "Z", Z, 'z', 'Z', 0 ),
-	DEFKEY(  "U", U, 'u', 'U', 0 ),
-	DEFKEY(  "I", I, 'i', 'I', 0 ),
-	DEFKEY(  "O", O, 'o', 'O', 0 ),
-	DEFKEY(  "P", P, 'p', 'P', 0 ),
-	DEFKEY(  "Ü", Invalid, 'q', 'Q', 0 ), // TODO: Add virtual key code
+	DEFKEY( "ESCAPE", Escape, 0, 0, 0 ),
+	DEFKEY( "1", D1, '1', '!', 0 ),
+	DEFKEY( "2", D2, '2', '\"', 0 ),
+	DEFKEY( "3", D3, '3', 0, 0 ),
+	DEFKEY( "4", D4, '4', '$', 0 ),
+	DEFKEY( "5", D5, '5', '%', 0 ),
+	DEFKEY( "6", D6, '6', '&', 0 ),
+	DEFKEY( "7", D7, '7', '/', '{' ),
+	DEFKEY( "8", D8, '8', '(', '[' ),
+	DEFKEY( "9", D9, '9', ')', ']' ),
+	DEFKEY( "0", D0, '0', '=', '}' ),
+	DEFKEY( "\\", Invalid, 0, '?', '\\' ), // TODO: Add virtual key code
+	DEFKEY( "`", Invalid, '\'', '`', 0 ), // TODO: Add virtual key code
+	DEFKEY( "BACKSPACE", Backspace, 8, 8, 8 ),
+	DEFKEY( "TAB", Tab, 9, 9, 9 ),
+	DEFKEY( "q", Q, 'q', 'Q', '@' ),
+	DEFKEY( "w", W, 'w', 'W', 0 ),
+	DEFKEY( "e", E, 'e', 'E', 0 ),
+	DEFKEY( "r", R, 'r', 'R', 0 ),
+	DEFKEY( "t", T, 't', 'T', 0 ),
+	DEFKEY( "z", Z, 'z', 'Z', 0 ),
+	DEFKEY( "u", U, 'u', 'U', 0 ),
+	DEFKEY( "i", I, 'i', 'I', 0 ),
+	DEFKEY( "o", O, 'o', 'O', 0 ),
+	DEFKEY( "p", P, 'p', 'P', 0 ),
+	DEFKEY( "ü", Invalid, 'q', 'Q', 0 ), // TODO: Add virtual key code
 	DEFKEY( "+", Plus, 'q', 'Q', 0 ),
 	DEFKEY( "Enter", Enter, '\n', '\n', '\r' ),
 	DEFKEY( "CTRL-LEFT", ControlLeft, 0, 0, 0 ),
@@ -195,7 +197,7 @@ const Key keymap_set0[] = {
 	/* 75 */ DEFKEY( "NUM-4", Numpad4, '4', '4', 0 ),
 	/* 76 */ DEFKEY( "NUM-5", Numpad5, '5', '5', 0 ),
 	/* 77 */ DEFKEY( "NUM-6", Numpad6, '6', '6', 0 ),
-	/* 78 */ DEFKEY( "NUM-PLUS", NumpadPlus, '6', '6', 0 ),
+	/* 78 */ DEFKEY( "NUM-PLUS", NumpadPlus, '+', '+', 0 ),
 	/* 79 */ DEFKEY( "NUM-1", Numpad1, '1', '1', 0 ),
 	/* 80 */ DEFKEY( "NUM-2", Numpad2, '2', '2', 0 ),
 	/* 81 */ DEFKEY( "NUM-3", Numpad3, '3', '3', 0 ),
@@ -384,7 +386,15 @@ struct KeyHit
 	/**
 	 * @brief The scan code of the key that produces this key hit.
 	 */
-	uint32_t scanCode;
+	struct {
+		uint16_t code;
+		int16_t set;
+	} scanCode;
+	
+	/**
+	 * @brief The key that was hit.
+	 */
+	Key key;
 	
 	/**
 	 * @brief The code point (character) value that is associated with
@@ -397,6 +407,13 @@ struct KeyHit
 	 */
 	KeyHitFlags flags;
 };
+
+#define KBD_EVENT_QUEUE_SIZE 128
+
+volatile uint32_t kbdEventQueueReadPtr = 0;
+volatile uint32_t kbdEventQueueWritePtr = 0;
+KeyHit kbdEventQueue[KBD_EVENT_QUEUE_SIZE];
+bool kbdState[(int)VKey::LIMIT];
 
 void kbd_intr(CpuState * & cpu)
 {
@@ -456,23 +473,68 @@ void kbd_intr(CpuState * & cpu)
 		scancode = { kbpInput, 0 };
 	}
 	if(scancode.set >= 0) {
-		if(break_code) {
-			// Console::main << "Release " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set << "\n";
-		}
-		else {
-			Console::main << "Hit     " << (uint32_t)scancode.code << "/" << (uint32_t)scancode.set;
-			if(scancode.set == 0 && scancode.code < sizeof(keymap_set0) / sizeof(keymap_set0[0])) {
-				
-				Console::main << ":: " << 
-					"\"" << keymap_set0[scancode.code].name << "\", " << 
-					(uint32_t)keymap_set0[scancode.code].key << ", '"<< 
-					keymap_set0[scancode.code].lower << "', '"<< 
-					keymap_set0[scancode.code].upper << "', '"<< 
-					keymap_set0[scancode.code].variant << "'\n";
+		if(scancode.set == 0 && scancode.code < sizeof(keymap_set0) / sizeof(keymap_set0[0])) {
+			
+			KeyHit event;
+			event.scanCode.set = scancode.set;
+			event.scanCode.code = scancode.code;
+			event.flags = KeyHitFlags::None;
+			event.key = keymap_set0[scancode.code];
+			
+			if(break_code) {
+				event.flags |= KeyHitFlags::KeyRelease;
+			} else {
+				event.flags |= KeyHitFlags::KeyPress;
 			}
-			Console::main << "\n";
+			
+			// TODO: Add variant support with alt-graph here...
+			if(event.flags * KeyHitFlags::KeyPress) {
+				if(kbdState[(int)VKey::ShiftLeft] || kbdState[(int)VKey::ShiftRight]) {
+					event.codepoint = event.key.upper;
+				} else {
+					event.codepoint = event.key.lower;
+				}
+				if(event.codepoint != 0) {
+					event.flags |= KeyHitFlags::CharInput;
+				}
+			}
+			
+			// TODO: Implement key press/release counter for more precision?
+			kbdState[(int)event.key.key] = (break_code == 0);
+			
+			kbdEventQueue[(kbdEventQueueWritePtr++) % KBD_EVENT_QUEUE_SIZE] = event;
 		}
 	}
+}
+
+bool isPressed(VKey key) 
+{
+	return kbdState[(int)key];
+}
+
+bool getkey(KeyHit &hit, bool blocking)
+{
+	if(blocking) {
+		while(kbdEventQueueReadPtr >= kbdEventQueueWritePtr); // Burn, baby, burn!
+		hit = kbdEventQueue[(kbdEventQueueReadPtr++) % KBD_EVENT_QUEUE_SIZE];
+		return true;
+	} else {
+		if(kbdEventQueueReadPtr >= kbdEventQueueWritePtr) {
+			return false;
+		} else {
+			hit = kbdEventQueue[(kbdEventQueueReadPtr++) % KBD_EVENT_QUEUE_SIZE];
+			return true;
+		}
+	}
+}
+
+char getchar()
+{
+	KeyHit key;
+	do {
+		getkey(key, true);
+	} while(!(key.flags * KeyHitFlags::CharInput));
+	return (char)key.codepoint;
 }
 
 void init_keyboard(void);
@@ -486,7 +548,28 @@ void dasos_demo()
 
 	ASM::sti();
 
-	while(1);
+	/*
+	while(true)
+	{
+		KeyHit key;
+		getkey(key, true);
+	
+		if(key.flags * KeyHitFlags::KeyPress) {
+			Console::main << "Out of interrupt: " << key.key.name << "\n";
+			
+			if(isPressed(VKey::Escape)) {
+				Console::main << "with escape pressed :)\n";
+			}
+		}
+		if(key.flags * KeyHitFlags::CharInput) {
+			Console::main << "'" << (char)key.codepoint << "'\n";
+		}
+	}
+	*/
+	while(true)
+	{
+		Console::main << getchar(); 
+	}
 }
 
 
