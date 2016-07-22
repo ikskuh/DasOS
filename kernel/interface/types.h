@@ -138,7 +138,24 @@ typedef struct
  */
 typedef struct {
 	uint8_t r, g, b, a;
-} color_t;
+} __attribute__ ((packed)) color_t;
+
+typedef struct {
+	/**
+	 * @brief Size of the screen.
+	 */
+	uint32_t width, height;
+	
+	/**
+	 * @brief Length in bytes of a single scan line.
+	 */
+	uint32_t stride;
+	
+	/**
+	 * @brief Bits per pixel
+	 */
+	uint32_t bpp;
+} videomode_t;
 
 #if defined(__cplusplus)
 }

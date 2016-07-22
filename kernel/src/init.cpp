@@ -260,5 +260,8 @@ struct syscalls SYSCALLS =
 	&kbd_getchar,
 	&kbd_is_pressed,
 	&kbd_getkey,
+	&video_clear,
+	&video_buffer,
+	&video_getmode,
 	&_puts,
 };

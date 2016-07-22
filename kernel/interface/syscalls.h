@@ -34,6 +34,22 @@ struct syscalls
 	 */
 	bool (*getkey)(keyhit_t *hit, bool blocking);
 	
+	/**
+	 * @brief Clears the screen to a given color.
+	 */
+	void (*video_clear)(color_t color);
+
+	/**
+	 * @brief Gets a pointer to the current frame buffer.
+	 */
+	void * (*video_buffer)();
+
+	/**
+	 * @brief Gets the current video mode.
+	 * @param mode A pointer to the result.
+	 */
+	void (*video_getmode)(videomode_t *mode);
+	
 	void (*puts)(const char *text);
 };
 
