@@ -1,7 +1,7 @@
 .section multiboot
  
 #define MB_MAGIC 0x1badb002
-#define MB_FLAGS 0x00 // 0x07 is with video!
+#define MB_FLAGS 0x07 // 0x07 is with video!
 #define MB_CHECKSUM -(MB_MAGIC + MB_FLAGS)
  
 .align 4

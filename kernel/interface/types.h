@@ -133,6 +133,13 @@ typedef struct
 	keyhitflags_t flags;
 } keyhit_t;
 
+/**
+ * @brief RGBA color value.
+ */
+typedef struct {
+	uint8_t r, g, b, a;
+} color_t;
+
 #if defined(__cplusplus)
 }
 #endif
