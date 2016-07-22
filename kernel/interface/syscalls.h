@@ -39,6 +39,13 @@ struct syscalls
 
 extern struct syscalls SYSCALLS;
 
+#if !defined(DASOS_KERNEL)
+#define getchar (SYSCALLS.getchar)
+#define is_pressed (SYSCALLS.is_pressed)
+#define getkey (SYSCALLS.getkey)
+#define puts (SYSCALLS.puts)
+#endif
+
 #if defined(__cplusplus)
 }
 #endif

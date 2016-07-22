@@ -30,20 +30,44 @@ void dasos_demo();
 
 void timer_intr(CpuState * & cpu) { }
 
+void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr));
+
 extern "C" void init(multiboot::Structure const & mb)
 {
+	using namespace console_tools;
+	Console::main
+		<< "Flags:       " << bin(mb.flags) << "\n"
+		<< "LowMem:      " << hex(LOWMEM) << "\n"
+		<< "HighMem:     " << hex(HIGHMEM) << "\n"
+		<< "Commandline: " << mb.commandline << "\n"
+		<< "Bootloader:  " << mb.bootLoaderName << "\n"
+		<< "MB:          " << hex((uint32_t)&mb) << "\n"
+		<< "MB:          " << hex((uint32_t)mb.modules.length) << "\n"
+		<< "MB:          " << hex(mb.modules[0].start.numeric()) << "\n"
+		<< "MB:          " << hex((uint32_t)mb.modules.begin()) << "\n"
+		;
+	
 	initialize_pmm(mb);
+	
+	secure_multiboot(mb, [](uint32_t a) { PMM::markUsed(physical_t(a)); });
 	
 	GDT::initialize();
 	
 	IDT::initialize();
 	
 	initialize_vmm();
-	
+		
 	Console::main
-		<< "LowMem:  " << LOWMEM << "\n"
-		<< "HighMem: " << HIGHMEM << "\n";
-	
+		<< "Flags:       " << bin(mb.flags) << "\n"
+		<< "LowMem:      " << hex(LOWMEM) << "\n"
+		<< "HighMem:     " << hex(HIGHMEM) << "\n"
+		<< "Commandline: " << mb.commandline << "\n"
+		<< "Bootloader:  " << mb.bootLoaderName << "\n"
+		<< "MB:          " << hex((uint32_t)&mb) << "\n"
+		<< "MB:          " << hex((uint32_t)mb.modules.length) << "\n"
+		<< "MB:          " << hex(mb.modules[0].start.numeric()) << "\n"
+		<< "MB:          " << hex((uint32_t)mb.modules.begin()) << "\n"
+		;
 	
 	IDT::interrupt(0x20) = Interrupt(timer_intr);
 	kbd_init();
@@ -72,6 +96,21 @@ extern "C" void init(multiboot::Structure const & mb)
 	Console::main << "Program finished.\n";
 	
 	while(1);
+}
+
+void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr))
+{
+	auto caa = [](void const * p) -> uint32_t { return (uint32_t)p & 0xFFFFF000; };
+	fn(caa(&mb));
+	fn(caa(mb.commandline));
+	fn(caa(mb.bootLoaderName));
+	
+	for(multiboot::Module const & mod : mb.modules) {
+		fn(caa(&mod));
+		for(uint32_t s = caa(mod.start.data()); s < mod.end.numeric(); s += 0x1000) {
+			fn(s);
+		}
+	}
 }
 
 void load_elf(multiboot::Module const & module)
@@ -132,6 +171,7 @@ void initialize_vmm()
 	
 	LOWMEM = 0x40000000;
 	HIGHMEM = 0x40000000;
+	//*
 	for(uint32_t i = 0; i < userspace_size; i++) {
 		
 		kernelContext->map(
@@ -141,6 +181,7 @@ void initialize_vmm()
 		
 		HIGHMEM += 0x1000;
 	}
+	// */
 		
 	Console::main << "Active Context...\n";
 	VMM::activate(*kernelContext);

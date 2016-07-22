@@ -52,7 +52,7 @@ uint32_t & VMMContext::getPageDescriptor(virtual_t v)
 	auto & entry = table->pageDescriptor(tableIndex);
 	/*
 	Console::main <<
-		v << " -> " << directoryIndex << "/" << tableIndex << ": " << tableDesc << "/" << entry << "\n";
+		v << " -> " << directoryIndex << "/" << tableIndex << ": " << console_tools::hex(tableDesc) << "/" << console_tools::hex(entry) << "\n";
 	//*/
 	return entry;
 }
@@ -81,7 +81,7 @@ void VMMContext::map(virtual_t virt, physical_t phys, VMMFlags flags)
 	
 	/*
 	Console::main <<
-		"Mapping " << virt << " -> " << phys << " [" << bin(static_cast<int>(flags)) << "]: " << hex(pageDesc) << "\n";
+		"Mapping " << hex(virt.numeric()) << " -> " << hex(phys.numeric()) << " [" << bin(static_cast<uint32_t>(flags)) << "]: " << hex(pageDesc) << "\n";
 	//*/
 	ASM::invlpg(virt.data());
 }

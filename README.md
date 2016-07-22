@@ -8,7 +8,7 @@ graphics and sound. All programs will run in fullscreen with a small OS status b
 ## Planned Features
 
 - FAT32 Driver (*pending*)
-- Keyboard Input (*pending*)
+- Keyboard Input
 - Sound Driver (*pending*)
 - Network (IP)
 	- TCP (*pending*)

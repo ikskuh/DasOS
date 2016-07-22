@@ -2,9 +2,6 @@
 #include <stdint.h>
 #include "syscalls.h"
 
-#define puts (SYSCALLS.puts)
-#define getkey (SYSCALLS.getkey)
-
 extern "C" void main()
 {
 	puts("Hello World!\n");

@@ -3,20 +3,19 @@
 #include "idt.hpp"
 #include "io.hpp"
 
+#undef DASOS_KERNEL
 #include "syscalls.h"
 
 void dasos_demo()
 {
-	ASM::sti();
-
 	while(true)
 	{
 		keyhit_t key;
-		SYSCALLS.getkey(&key, true);
+		getkey(&key, true);
 	
 		if(key.flags & KHF_KeyPress) {
 			Console::main << "Out of interrupt: " << (uint32_t)key.key.key;
-			if(SYSCALLS.is_pressed(VK_Escape)) {
+			if(is_pressed(VK_Escape)) {
 				Console::main << " with escape pressed";
 			}
 			Console::main << "\n";
@@ -28,6 +27,6 @@ void dasos_demo()
 	
 	while(true)
 	{
-		Console::main << (char)SYSCALLS.getchar(); 
+		Console::main << (char)getchar(); 
 	}
 }
