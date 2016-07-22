@@ -8,6 +8,10 @@
 #include "elf.hpp"
 #include "idt.hpp"
 #include "gdt.hpp"
+#include "asm.hpp"
+
+#include "syscalls.h"
+#include "keyboard.hpp"
 
 VMMContext * kernelContext;
 
@@ -24,6 +28,8 @@ void load_elf(multiboot::Module const & module);
 
 void dasos_demo();
 
+void timer_intr(CpuState * & cpu) { }
+
 extern "C" void init(multiboot::Structure const & mb)
 {
 	initialize_pmm(mb);
@@ -37,6 +43,12 @@ extern "C" void init(multiboot::Structure const & mb)
 	Console::main
 		<< "LowMem:  " << LOWMEM << "\n"
 		<< "HighMem: " << HIGHMEM << "\n";
+	
+	
+	IDT::interrupt(0x20) = Interrupt(timer_intr);
+	kbd_init();
+	
+	ASM::sti();
 	
 	if(mb.modules.length == 0) {
 		Console::main << "No multiboot modules found, starting demo...\n";
@@ -52,10 +64,10 @@ extern "C" void init(multiboot::Structure const & mb)
 	
 	Console::main << "Starting program...\n";
 	{
-		typedef void (*mainfunction)(void);
+		typedef void (*mainfunction)(struct syscalls *syscalls);
 		
 		mainfunction main = (mainfunction)LOWMEM;
-		main();
+		main(&SYSCALLS);
 	}
 	Console::main << "Program finished.\n";
 	
@@ -185,3 +197,18 @@ void initialize_pmm(multiboot::Structure const & data)
 	// Mark the video memory as used.
 	PMM::markUsed(physical_t(0xB8000));
 }
+
+
+
+extern "C" void _puts(const char *s)
+{
+	Console::main << s;
+}
+
+struct syscalls SYSCALLS = 
+{
+	&kbd_getchar,
+	&kbd_is_pressed,
+	&kbd_getkey,
+	&_puts,
+};

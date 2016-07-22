@@ -5,7 +5,7 @@ AR=/opt/i686-elf/bin/ar
 AS=/opt/bin/i686-elf-gcc
 
 LIBS += -L/opt/lib/gcc/i686-elf/6.1.0/
-INCLUDE_DIRS += ../kernel/include/ /opt/lib/gcc/i686-elf/6.1.0/include/
+INCLUDE_DIRS += ../kernel/interface/ /opt/lib/gcc/i686-elf/6.1.0/include/
 
 FLAGS    += -ffreestanding -mno-sse -Werror -Wall -iquote include $(addprefix -I, $(INCLUDE_DIRS)) -O3 -g
 ASFLAGS  += $(FLAGS)
@@ -42,4 +42,4 @@ dirs:
 	$(AS) $(ASFLAGS) -c -o obj/$@ $<
 
 $(PROGRAM): $(OBJS)
-	$(LD) -Tlinker.ld --just-symbols=../kernel/symbols -o $@ $(addprefix obj/, $^) $(LDFLAGS) $(LIBS)
+	$(LD) -Tlinker.ld -o $@ $(addprefix obj/, $^) $(LDFLAGS) $(LIBS)

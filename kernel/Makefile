@@ -7,7 +7,7 @@ AR=/opt/i686-elf/bin/ar
 AS=/opt/bin/i686-elf-gcc
 
 LIBS += -L/opt/lib/gcc/i686-elf/6.1.0/
-INCLUDE_DIRS += include/ /opt/lib/gcc/i686-elf/6.1.0/include/
+INCLUDE_DIRS += interface/ include/ /opt/lib/gcc/i686-elf/6.1.0/include/
 
 
 FLAGS    += -ffreestanding -mno-sse -Werror -Wall -iquote include $(addprefix -I, $(INCLUDE_DIRS)) -O3 -g
@@ -19,13 +19,10 @@ LDFLAGS  += -L../libs/ -lgcc
 SRCS += $(shell find -regextype egrep -regex '.*/.*\.(cpp|S|c)')
 OBJS += $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
-all: dirs $(KERNEL) symbols
+all: dirs $(KERNEL)
 
 dirs:
 	mkdir -p obj
-	
-symbols: $(KERNEL)
-	nm DasOS | sed -r "s|(\w+)\s+(\w+)\s+(\w+)|\3 = 0x\1;|" | grep -E "^\w+ = \w+;$$" > symbols
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o obj/$@ $<
