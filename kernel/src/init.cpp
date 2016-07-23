@@ -71,8 +71,36 @@ extern "C" void init(multiboot::Structure const & mb)
 		}
 	}
 	
+	{ // Map available memory into 
+		uint32_t freeMem = PMM::getFreeMemory();
+		int32_t userspace_size = (freeMem >> 12) - 256; // 16 MB?
+		
+		Console::main << (freeMem >> 20) << " MB free RAM\n";
+		Console::main << userspace_size << " pages for user space.\n";
+		if(userspace_size <= 0) {
+			Console::main << "Insufficient memory!\n";
+			return;
+		}
+		
+		RAMEND = USERSTART;
+		for(int32_t i = 0; i < userspace_size; i++) {
+			
+			kernelContext->map(
+				virtual_t(RAMEND),
+				PMM::alloc(),
+				VMMFlags::Writable);
+			
+			RAMEND += 0x1000;
+		}
+	}
+	
+	Console::main << "Active Context...\n";
+	VMM::activate(*kernelContext);
+	
 	Console::main << "Active Paging...\n";
 	VMM::enable();
+	
+	SYSCALLS.video_clear({255, 0, 255});
 
 	Console::main
 		<< "Flags:       " << bin(mb.flags) << "\n"
@@ -210,24 +238,6 @@ void initialize_vmm()
 		virtual_t(kernelContext),
 		physical_t(kernelContext),
 		VMMFlags::Writable);
-		
-	uint32_t userspace_size = 4096; // 16 MB?
-	
-	Console::main << userspace_size << " pages for user space.\n";
-	
-	RAMEND = USERSTART;
-	for(uint32_t i = 0; i < userspace_size; i++) {
-		
-		kernelContext->map(
-			virtual_t(RAMEND),
-			PMM::alloc(),
-			VMMFlags::Writable);
-		
-		RAMEND += 0x1000;
-	}
-		
-	Console::main << "Active Context...\n";
-	VMM::activate(*kernelContext);
 }
 
 struct marker;

@@ -8,14 +8,14 @@ vbe::ModeInfo videoMode;
 void vid_init(vbe::ModeInfo const * mode)
 {
 	::videoMode = *mode;
-	video_clear({0, 0, 255});
-	
+	/*
 	Console::main
 		<< "Video Info:\n"
 		<< "  BPP:   " << (uint32_t)videoMode.bpp << "\n"
 		<< "  Red:   " << hex((uint32_t)videoMode.redMask) << "@" << hex((uint32_t)videoMode.redPosition) << "\n"
 		<< "  Green: " << hex((uint32_t)videoMode.greenMask) << "@" << hex((uint32_t)videoMode.greenPosition) << "\n"
 		<< "  Blue:  " << hex((uint32_t)videoMode.blueMask) << "@" << hex((uint32_t)videoMode.bluePosition) << "\n";
+	*/
 }
 
 extern "C" void * video_buffer()

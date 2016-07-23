@@ -8,7 +8,7 @@ memlimits_t __memoryLimits;
 
 void __usrinit(struct syscalls * syscalls)
 {
-//	SYSCALLS = *syscalls;
-//	SYSCALLS.get_memlimits(&__memoryLimits);
-//	main();
+	SYSCALLS = *syscalls;
+	SYSCALLS.get_memlimits(&__memoryLimits);
+	main();
 }
