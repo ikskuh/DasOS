@@ -14,7 +14,7 @@ graphics and sound. All programs will run in fullscreen with a small OS status b
 	- TCP (*pending*)
 	- UDP (*pending*)
 - Graphical Interface
-	- VBE (*pending*)
+	- VBE
 	- TinyGL (*pending*)
 - Graphical Shell
 	- Start program (*pending*)
@@ -48,7 +48,7 @@ The kernel will export all required functions via simple calls, no syscall inter
 
 ### 0.4
 - Graphics Driver
-- TinyGL
+- -TinyGL- (too many dependencies for this version)
 - Kernel Graphics and GL API
 
 ### 0.5
