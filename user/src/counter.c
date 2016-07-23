@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "syscalls.h"
 
-extern "C" void main()
+void main()
 {
 	puts("Hello World!\n");
 	while(true)
@@ -20,4 +20,23 @@ extern "C" void main()
 			}
 		}
 	}
+}
+
+
+void die(const char *msg)
+{
+	puts("User Panic: ");
+	puts(msg);
+	puts("\n");
+	while(1);
+}
+
+void die_extra(const char *msg, const char *extra)
+{
+	puts("User Panic: ");
+	puts(msg);
+	puts(": ");
+	puts(extra);
+	puts("\n");
+	while(1);
 }

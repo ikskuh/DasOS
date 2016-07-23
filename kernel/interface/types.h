@@ -12,6 +12,19 @@ extern "C" {
  */
 typedef uint32_t codepoint_t;
 
+typedef struct
+{
+	/**
+	 * @brief Begin of userspace memory. Should be 0x40000000
+	 */
+	uint32_t lower;
+	
+	/**
+	 * @brief End of userspace memory. Memory above this pointer is invalid.
+	 */
+	uint32_t upper;
+} memlimits_t;
+
 typedef enum
 {
 	VK_Invalid = 0,

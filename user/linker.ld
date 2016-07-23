@@ -38,5 +38,6 @@ SECTIONS
 	} : data
 	.bss ALIGN(4096) : {
 			*(.bss)
+			heap_start = .;
 	} : data
 }

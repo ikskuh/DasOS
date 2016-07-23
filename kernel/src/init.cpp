@@ -15,23 +15,26 @@
 #include "video.hpp"
 #include "timer.hpp"
 
+static const uint32_t USERSTART = 0x40000000;
+
+typedef void (*mainfunction_t)(struct syscalls *syscalls);
+
 VMMContext * kernelContext;
 
 uint16_t *video = (uint16_t*)0xB8000;
 
-uint32_t LOWMEM;
-uint32_t HIGHMEM;
+uint32_t RAMEND;
 
 void initialize_pmm(multiboot::Structure const & mb);
 
 void initialize_vmm();
 
-void load_elf(multiboot::Module const & module);
+mainfunction_t load_elf(multiboot::Module const & module);
 
 void dasos_demo();
 
 void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr));
-
+		
 extern "C" void init(multiboot::Structure const & mb)
 {
 	using namespace console_tools;
@@ -39,13 +42,6 @@ extern "C" void init(multiboot::Structure const & mb)
 	initialize_pmm(mb);
 	
 	secure_multiboot(mb, [](uint32_t a) { PMM::markUsed(physical_t(a)); });
-	
-	Console::main << "ptr:   " << hex((uint32_t)mb.vbe.modeInfo) << "\n";
-	Console::main << "siz-x: " << (uint32_t)mb.vbe.modeInfo->res.x << "\n";
-	Console::main << "siz-y: " << (uint32_t)mb.vbe.modeInfo->res.y << "\n";
-	Console::main << "pitch: " << (uint32_t)mb.vbe.modeInfo->pitch << "\n";
-	Console::main << "video: " << (uint32_t)mb.vbe.modeInfo->framebuffer << "\n";
-	
 	
 	GDT::initialize();
 	
@@ -80,8 +76,7 @@ extern "C" void init(multiboot::Structure const & mb)
 
 	Console::main
 		<< "Flags:       " << bin(mb.flags) << "\n"
-		<< "LowMem:      " << hex(LOWMEM) << "\n"
-		<< "HighMem:     " << hex(HIGHMEM) << "\n"
+		<< "RamEnd:     " << hex(RAMEND) << "\n"
 		<< "Commandline: " << mb.commandline << "\n"
 		<< "Bootloader:  " << mb.bootLoaderName << "\n"
 		;
@@ -101,15 +96,16 @@ extern "C" void init(multiboot::Structure const & mb)
 	
 	Console::main << "Loading module: " << module.name << "\n";
 	
-	load_elf(module);
+	mainfunction_t main = load_elf(module);
 	
-	SYSCALLS.getchar();
+	if(((uint32_t)main) < USERSTART)
+	{
+		Console::main << "Could not find a fitting entry point :(\n";
+		return;
+	}
 	
 	Console::main << "Starting program...\n";
 	{
-		typedef void (*mainfunction)(struct syscalls *syscalls);
-		
-		mainfunction main = (mainfunction)LOWMEM;
 		main(&SYSCALLS);
 	}
 	Console::main << "Program finished.\n";
@@ -155,13 +151,13 @@ static void blitIcon(void *ptr)
 	SYSCALLS.video_swap();
 }
 
-void load_elf(multiboot::Module const & module)
+mainfunction_t load_elf(multiboot::Module const & module)
 {
 	elf::Header const &file = *module.start.data<elf::Header const>();
 	if(file.magic != elf::MAGIC)
 	{
 		Console::main << "Invalid ELF magic.\n";
-		return;
+		return NULL;
 	}
 	Console::main << "ELF Version: " << file.version << "\n";
 	
@@ -184,8 +180,8 @@ void load_elf(multiboot::Module const & module)
 			continue;
 		}
 		
-		if(header->virt_addr < LOWMEM) {
-			Console::main << "ELF Section below LOWMEM, skipping...\n";
+		if(header->virt_addr < USERSTART) {
+			Console::main << "ELF Section below USERSTART, skipping...\n";
 			continue;
 		}
 	
@@ -195,6 +191,8 @@ void load_elf(multiboot::Module const & module)
 		memset(dest, 0, header->mem_size);
 		memcpy(dest, src, header->file_size);
 	}
+	
+	return (mainfunction_t)file.entry;
 }
 
 void initialize_vmm()
@@ -215,19 +213,18 @@ void initialize_vmm()
 		
 	uint32_t userspace_size = 4096; // 16 MB?
 	
-	LOWMEM = 0x40000000;
-	HIGHMEM = 0x40000000;
-	//*
+	Console::main << userspace_size << " pages for user space.\n";
+	
+	RAMEND = USERSTART;
 	for(uint32_t i = 0; i < userspace_size; i++) {
 		
 		kernelContext->map(
-			virtual_t(HIGHMEM),
+			virtual_t(RAMEND),
 			PMM::alloc(),
 			VMMFlags::Writable);
 		
-		HIGHMEM += 0x1000;
+		RAMEND += 0x1000;
 	}
-	// */
 		
 	Console::main << "Active Context...\n";
 	VMM::activate(*kernelContext);
@@ -289,8 +286,15 @@ extern "C" void _puts(const char *s)
 	Console::main << s;
 }
 
+extern "C" void get_memlimits(memlimits_t *limits)
+{
+	if(limits == nullptr) return;
+	*limits = { USERSTART, RAMEND };
+}
+
 struct syscalls SYSCALLS = 
 {
+	&get_memlimits,
 	&kbd_getchar,
 	&kbd_is_pressed,
 	&kbd_getkey,

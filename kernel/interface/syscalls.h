@@ -14,6 +14,12 @@ extern "C" {
 struct syscalls
 {
 	/**
+	 * @brief Gets the memory limits for the current platform.
+	 * @param limits Pointer to the result.
+	 */
+	void (*get_memlimits)(memlimits_t *limits);
+
+	/**
 	 * @brief Reads a single symbol from the keyboard.
 	 * 
 	 * This read is blocking and returns a guaranteed value.

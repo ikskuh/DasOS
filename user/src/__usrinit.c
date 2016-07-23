@@ -4,8 +4,11 @@ struct syscalls SYSCALLS;
 
 void main();
 
+memlimits_t __memoryLimits;
+
 void __usrinit(struct syscalls * syscalls)
 {
-	SYSCALLS = *syscalls;
-	main();
+//	SYSCALLS = *syscalls;
+//	SYSCALLS.get_memlimits(&__memoryLimits);
+//	main();
 }
