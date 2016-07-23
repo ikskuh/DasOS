@@ -103,6 +103,8 @@ extern "C" void init(multiboot::Structure const & mb)
 	
 	load_elf(module);
 	
+	SYSCALLS.getchar();
+	
 	Console::main << "Starting program...\n";
 	{
 		typedef void (*mainfunction)(struct syscalls *syscalls);
@@ -137,6 +139,22 @@ void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr)
 	}
 }
 
+static void blitIcon(void *ptr)
+{
+	uint8_t *image = (uint8_t*)ptr;
+	for(uint32_t y = 0; y < 64; y++) {
+		for(uint32_t x = 0; x < 64; x++) {
+			color_t c = {
+				image[3 * (64 * y + x) + 0],
+				image[3 * (64 * y + x) + 1],
+				image[3 * (64 * y + x) + 2]
+			};
+			SYSCALLS.video_setpixel(x, y, c);
+		}
+	}
+	SYSCALLS.video_swap();
+}
+
 void load_elf(multiboot::Module const & module)
 {
 	elf::Header const &file = *module.start.data<elf::Header const>();
@@ -150,16 +168,20 @@ void load_elf(multiboot::Module const & module)
 	
 	elf::ProgramHeader const *header  = (elf::ProgramHeader const *)(module.start.numeric() + file.ph_offset);
 	
+	using namespace console_tools;
 	for(uint32_t i = 0; i < file.ph_entry_count; i++, header++) {
 	
 		Console::main 
 			<< "Program Header " << (uint32_t)i << ": " 
-			<< header->type << ", "
-			<< header->virt_addr << "@" << header->offset
+			<< hex(header->type) << ", "
+			<< hex(header->virt_addr) << "@" << hex(header->offset)
 			<< "\n";
 		/* Nur Program Header vom Typ LOAD laden */
 		if (header->type != 1) {
-				continue;
+			if(header->type == 0x10) {
+				blitIcon(((char*)&file) + header->offset);
+			}
+			continue;
 		}
 		
 		if(header->virt_addr < LOWMEM) {

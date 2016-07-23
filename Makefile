@@ -1,5 +1,5 @@
 
-all: kernel user
+all: kernel user boot.img
 
 kernel: ./kernel/
 	$(MAKE) -C $@ -B
@@ -7,7 +7,7 @@ kernel: ./kernel/
 user: ./user/
 	$(MAKE) -C $@ -B
 
-boot.img:
+boot.img: kernel/DasOS user/counter
 	mformat -C -f 1440 -v VIDEO -i boot.img ::
 	mcopy -i boot.img \
 		kernel/DasOS \
