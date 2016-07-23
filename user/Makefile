@@ -41,5 +41,8 @@ dirs:
 %.o: src/%.S
 	$(AS) $(ASFLAGS) -c -o obj/$@ $<
 
-$(PROGRAM): $(OBJS)
+icon.o: icon.bin
+	objcopy -I binary -O elf32-i386 -B i386 --rename-section .data=icon icon.bin obj/icon.o
+	
+$(PROGRAM): $(OBJS) icon.o
 	$(LD) -Tlinker.ld -o $@ $(addprefix obj/, $^) $(LDFLAGS) $(LIBS)
