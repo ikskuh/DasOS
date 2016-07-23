@@ -18,9 +18,57 @@ void vid_init(vbe::ModeInfo const * mode)
 		<< "  Blue:  " << hex((uint32_t)videoMode.blueMask) << "@" << hex((uint32_t)videoMode.bluePosition) << "\n";
 }
 
-static inline void set_pixel(uint32_t x, uint32_t y, color_t color)
+extern "C" void * video_buffer()
 {
-	uint8_t * pixels = (uint8_t*)videoMode.framebuffer;
+	return (void*)0x20000000;
+}
+
+static inline void *__movsb(void *d, const void *s, size_t n)
+{
+	asm volatile ("rep movsb"
+		: "=D" (d),
+		"=S" (s),
+		"=c" (n)
+		: "0" (d),
+		"1" (s),
+		"2" (n)
+		: "memory");
+	return d;
+}
+
+static inline void *__movsw(void *d, const void *s, size_t n)
+{
+	asm volatile ("rep movsw"
+		: "=D" (d),
+		"=S" (s),
+		"=c" (n)
+		: "0" (d),
+		"1" (s),
+		"2" (n/2)
+		: "memory");
+	return d;
+}
+
+extern "C" void video_swap()
+{
+	char *src = (char*)video_buffer();
+	char *dst = (char*)videoMode.framebuffer;
+	uint32_t size = videoMode.pitch * videoMode.res.y;
+	__movsw(dst, src, size);
+}
+
+extern "C" void video_getmode(videomode_t *mode)
+{
+	if(mode == nullptr) return;
+	mode->width = videoMode.res.x;
+	mode->height = videoMode.res.y;
+	mode->stride = videoMode.pitch;
+	mode->bpp = videoMode.bpp;
+}
+
+extern "C" void video_setpixel(uint32_t x, uint32_t y, color_t color)
+{
+	uint8_t * pixels = (uint8_t*)video_buffer();
 	if(x >= videoMode.res.x) return;
 	if(y >= videoMode.res.y) return;
 	
@@ -64,21 +112,7 @@ extern "C" void video_clear(color_t color)
 {
 	for(uint32_t y = 0; y < videoMode.res.y; y++) {
 		for(uint32_t x = 0; x < videoMode.res.x; x++) {
-			set_pixel(x, y, color);
+			video_setpixel(x, y, color);
 		}
 	}
-}
-
-extern "C" void * video_buffer()
-{
-	return (void*)videoMode.framebuffer;
-}
-
-extern "C" void video_getmode(videomode_t *mode)
-{
-	if(mode == nullptr) return;
-	mode->width = videoMode.res.x;
-	mode->height = videoMode.res.y;
-	mode->stride = videoMode.pitch;
-	mode->bpp = videoMode.bpp;
 }

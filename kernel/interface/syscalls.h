@@ -50,6 +50,32 @@ struct syscalls
 	 */
 	void (*video_getmode)(videomode_t *mode);
 	
+	/**
+	 * @brief Sets a pixel.
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @param c pixel color
+	 */
+	void (*video_setpixel)(uint32_t x, uint32_t y, color_t c);
+	
+	/**
+	 * @brief Swaps the front and the back buffer.
+	 *
+	 * Presents the current back buffer on the screen.
+	 */
+	void (*video_swap)();
+	
+	/**
+	 * @brief Gets the current timer counter.
+	 * @return The current counter.
+	 */
+	uint32_t (*timer_get)();
+	
+	/**
+	 * @brief Resets the timer counter to zero.
+	 */
+	void (*timer_reset)();
+	
 	void (*puts)(const char *text);
 };
 
@@ -64,6 +90,11 @@ extern struct syscalls SYSCALLS;
 #define video_clear (SYSCALLS.video_clear)
 #define video_buffer (SYSCALLS.video_buffer)
 #define video_getmode (SYSCALLS.video_getmode)
+#define video_setpixel (SYSCALLS.video_setpixel)
+#define video_swap (SYSCALLS.video_swap)
+
+#define timer_get (SYSCALLS.timer_get)
+#define timer_reset (SYSCALLS.timer_reset)
 
 #define puts (SYSCALLS.puts)
 #endif

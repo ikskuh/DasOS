@@ -13,6 +13,7 @@
 #include "syscalls.h"
 #include "keyboard.hpp"
 #include "video.hpp"
+#include "timer.hpp"
 
 VMMContext * kernelContext;
 
@@ -28,8 +29,6 @@ void initialize_vmm();
 void load_elf(multiboot::Module const & module);
 
 void dasos_demo();
-
-void timer_intr(CpuState * & cpu) { }
 
 void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr));
 
@@ -60,11 +59,24 @@ extern "C" void init(multiboot::Structure const & mb)
 			physical_t(a),
 			VMMFlags::Writable);
 	});
+
+	vid_init(mb.vbe.modeInfo);
+	{ // Provide video backbuffer memory.
+		videomode_t vmode;
+		video_getmode(&vmode);
+		
+		size_t siz = (vmode.stride * vmode.height);
+		for(uint32_t i = 0; i < siz; i += 0x1000) {
+			uint32_t addr = (uint32_t)video_buffer() + i;
+			kernelContext->map(
+					virtual_t(addr),
+					PMM::alloc(),
+					VMMFlags::Writable);
+		}
+	}
 	
 	Console::main << "Active Paging...\n";
 	VMM::enable();
-
-	vid_init(mb.vbe.modeInfo);
 
 	Console::main
 		<< "Flags:       " << bin(mb.flags) << "\n"
@@ -74,7 +86,7 @@ extern "C" void init(multiboot::Structure const & mb)
 		<< "Bootloader:  " << mb.bootLoaderName << "\n"
 		;
 	
-	IDT::interrupt(0x20) = Interrupt(timer_intr);
+	timer_init();
 	kbd_init();
 	
 	ASM::sti();
@@ -263,5 +275,9 @@ struct syscalls SYSCALLS =
 	&video_clear,
 	&video_buffer,
 	&video_getmode,
+	&video_setpixel,
+	&video_swap,
+	&timer_get,
+	&timer_reset,
 	&_puts,
 };
