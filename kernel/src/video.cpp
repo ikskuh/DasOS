@@ -44,11 +44,20 @@ static inline void set_pixel(uint32_t x, uint32_t y, color_t color)
 	}
 	uint32_t *pixel = (uint32_t*)&pixels[videoMode.pitch * y + n * x];
 	
-	*pixel = 
-		(~pixmask & *pixel) |
-		((((1<<videoMode.redMask) - 1) & color.r) << videoMode.redPosition) |
-		((((1<<videoMode.greenMask) - 1) & color.g) << videoMode.greenPosition) |
-		((((1<<videoMode.blueMask) - 1) & color.b) << videoMode.bluePosition);
+	if(videoMode.bpp == 32) {
+		// Just blit the color into the video buffer if we have 32 bpp
+		*pixel = *((uint32_t*)(&color));
+		if(videoMode.redPosition != 0) {
+			// Assert that if we don't have RGBX we will have XBGR
+			*pixel = __builtin_bswap32(*pixel) >> 8;
+		}
+	} else {
+		*pixel = 
+			(~pixmask & *pixel) |
+			((((1<<videoMode.redMask) - 1) & color.r) << videoMode.redPosition) |
+			((((1<<videoMode.greenMask) - 1) & color.g) << videoMode.greenPosition) |
+			((((1<<videoMode.blueMask) - 1) & color.b) << videoMode.bluePosition);
+	}
 }
 
 extern "C" void video_clear(color_t color)

@@ -56,9 +56,15 @@ struct syscalls
 extern struct syscalls SYSCALLS;
 
 #if !defined(DASOS_KERNEL)
+
 #define getchar (SYSCALLS.getchar)
 #define is_pressed (SYSCALLS.is_pressed)
 #define getkey (SYSCALLS.getkey)
+
+#define video_clear (SYSCALLS.video_clear)
+#define video_buffer (SYSCALLS.video_buffer)
+#define video_getmode (SYSCALLS.video_getmode)
+
 #define puts (SYSCALLS.puts)
 #endif
 
