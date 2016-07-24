@@ -6,7 +6,7 @@ void main();
 
 memlimits_t __memoryLimits;
 
-void __usrinit(struct syscalls * syscalls)
+void _daos_entry(struct syscalls * syscalls)
 {
 	SYSCALLS = *syscalls;
 	SYSCALLS.get_memlimits(&__memoryLimits);

@@ -1,4 +1,4 @@
-ENTRY(__usrinit)
+ENTRY(_daos_entry)
 OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386:i386)
 
@@ -8,6 +8,8 @@ PHDRS
 	data PT_LOAD;
 	icon 0x10;
 }
+
+INPUT(libstd.a)
 
 SECTIONS
 {
