@@ -6,10 +6,10 @@
 
 static inline void wait400NS(uint16_t p) 
 {
-	inb(p); 
-	inb(p); 
-	inb(p); 
-	inb(p); 
+	inb(p);
+	inb(p);
+	inb(p);
+	inb(p);
 }
 
 static bool isDriverInitialized = false;

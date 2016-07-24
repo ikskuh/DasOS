@@ -44,7 +44,7 @@ public:
 	bool isFloating();
 	
 	/**
-	 * @brief Initializes the 
+	 * @brief Initializes the ata device
 	 */
 	ATAError initialize();
 	

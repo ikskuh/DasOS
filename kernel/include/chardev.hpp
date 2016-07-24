@@ -67,6 +67,13 @@ private:
 public:
 	virtual void write(char c) = 0;
   
+	inline void write(void const * mem, uint32_t size) {
+		char const * p = (char const *)mem;
+		while(size--) {
+			this->write(*p++);
+		}
+	}
+	
   inline CharacterDevice & operator << (char c)
   {
     this->write(c);

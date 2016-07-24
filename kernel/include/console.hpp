@@ -104,6 +104,13 @@ public:
    */
 	void put(char c);
 	
+	inline void write(void const * mem, uint32_t size) {
+		char const * p = (char const *)mem;
+		while(size--) {
+			this->put(*p++);
+		}
+	}
+	
   /**
    * Inserts a line break and returns the cursor to the start.
    */
