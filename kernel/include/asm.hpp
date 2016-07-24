@@ -30,6 +30,18 @@ namespace ASM
 		return data;
 	}
 	
+	static inline void outw(uint16_t port, uint16_t data)
+	{
+		asm volatile ("outw %0, %1" : : "a" (data), "Nd" (port));
+	}
+
+	static inline uint16_t inw(uint16_t port)
+	{
+		uint16_t data;
+		asm volatile ("inw %1, %0" : "=a" (data) : "d" (port));
+		return data;
+	}
+	
 	static inline void invlpg(void* m)
 	{
 			/* Clobber memory to avoid optimizer re-ordering access before invlpg, which may cause nasty bugs. */

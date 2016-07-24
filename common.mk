@@ -7,7 +7,7 @@ AS=/opt/bin/i686-elf-gcc
 LIBS += -L/opt/lib/gcc/i686-elf/6.1.0/ 
 INCLUDE_DIRS += /opt/lib/gcc/i686-elf/6.1.0/include/
 
-FLAGS    += -ffreestanding -mno-sse -Werror -Wall -Wno-error=unused-function -Wno-error=unused-variable  -iquote include $(addprefix -I, $(INCLUDE_DIRS)) -O3 -g
+FLAGS    += -ffreestanding -mno-sse -Werror -Wall -Wno-error=unused-but-set-variable -Wno-error=unused-function -Wno-error=unused-variable  -iquote include $(addprefix -I, $(INCLUDE_DIRS)) -O3 -g
 ASFLAGS  += $(FLAGS)
 CFLAGS   += $(FLAGS)	
 CXXFLAGS += $(FLAGS) -std=c++14 -fno-rtti -fno-exceptions -fno-leading-underscore -fno-use-cxa-atexit -nostdlib -fno-builtin
