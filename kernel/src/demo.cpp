@@ -27,6 +27,21 @@ typedef struct {
 	char fatName[8];
 } __attribute__ ((packed)) fat16header_t;
 
+typedef struct {
+	char name[11];
+	uint8_t flags;
+	uint8_t ntReserved;
+	uint8_t creationTimeFine;
+	uint16_t creationTime;
+	uint16_t creationDate;
+	uint16_t lastAccessDate;
+	uint16_t firstClusterH;
+	uint16_t writeTime;
+	uint16_t writeDate;
+	uint16_t firstClusterL;
+	uint32_t size;
+} __attribute__ ((packed))  directory_t;
+
 #define TEST(x) if((x) != ATAError::Success) { Console::main << #x " << failed.\n"; while(true); }
 
 void fat_test(ATADevice & ata)
@@ -83,6 +98,34 @@ void fat_test(ATADevice & ata)
 		Console::main << "Invalid extended boot signature.\n";
 		return;
 	}
+	
+	
+	uint8_t directory[512];
+	
+	TEST(ata.read(directory, header->reservedSectors + header->numTables * header->fatSize, 0x01))
+	
+	Console::main << sizeof(directory_t) << "\n";
+	
+	directory_t *dir =  (directory_t*)directory;
+	for(uint32_t i = 0; i < 10; i++, dir++) {
+		
+		// skip            empty                   removed
+		if(dir->name[0] == 0x00 || dir->name[0] == 0xE5) {
+			continue;
+		}
+		
+		Console::main << "FILE[" << i << "] ";
+		Console::main.write(&dir->name[0], 8);
+		Console::main.put('.');
+		Console::main.write(&dir->name[8], 3);
+		
+		Console::main 
+			<< " " << bin((uint32_t)dir->flags) 
+			<< " " << (uint32_t)dir->firstClusterL 
+			<< " " << (uint32_t)dir->size << "\n";
+	
+	}
+
 }
 
 
