@@ -168,10 +168,14 @@ static void blitIcon(void *ptr)
 	uint8_t *image = (uint8_t*)ptr;
 	for(uint32_t y = 0; y < 64; y++) {
 		for(uint32_t x = 0; x < 64; x++) {
+			if(image[4 * (64 * y + x) + 3] < 0x80) {
+				// Simple Alpha Testing
+				continue;
+			}
 			color_t c = {
-				image[3 * (64 * y + x) + 0],
-				image[3 * (64 * y + x) + 1],
-				image[3 * (64 * y + x) + 2]
+				image[4 * (64 * y + x) + 0],
+				image[4 * (64 * y + x) + 1],
+				image[4 * (64 * y + x) + 2]
 			};
 			SYSCALLS.video_setpixel(x, y, c);
 		}

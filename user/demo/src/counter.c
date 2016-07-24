@@ -5,7 +5,7 @@ void main()
 {
 	color_t background = {255, 0, 0};
 	video_clear(background);
-	video_swap(); // Required for back buffering
+	// video_swap(); // Required for back buffering
 	
 	puts("Hello World!\n");
 	while(true)
