@@ -100,14 +100,15 @@ void fat_test(ATADevice & ata)
 	}
 	
 	
-	uint8_t directory[512];
+	uint32_t rootLen = sizeof(directory_t) * header->rootMaxSize;
+	uint8_t directory[rootLen];
 	
-	TEST(ata.read(directory, header->reservedSectors + header->numTables * header->fatSize, 0x01))
+	TEST(ata.read(directory, header->reservedSectors + header->numTables * header->fatSize, rootLen >> 9))
 	
-	Console::main << sizeof(directory_t) << "\n";
+	Console::main << rootLen << ", " << (rootLen >> 9) << "\n";
 	
 	directory_t *dir =  (directory_t*)directory;
-	for(uint32_t i = 0; i < 10; i++, dir++) {
+	for(uint32_t i = 0; i < header->rootMaxSize; i++, dir++) {
 		
 		// skip            empty                   removed
 		if(dir->name[0] == 0x00 || dir->name[0] == 0xE5) {
@@ -118,6 +119,24 @@ void fat_test(ATADevice & ata)
 		Console::main.write(&dir->name[0], 8);
 		Console::main.put('.');
 		Console::main.write(&dir->name[8], 3);
+		
+		struct {
+			uint8_t flag;
+			const char *name;
+		} flags[] {
+			{ 0x01, "READ_ONLY" }, 
+			{ 0x02, "HIDDEN" },
+			{ 0x04, "SYSTEM" },
+			{ 0x08, "VOLUME_ID" },
+			{ 0x10, "DIRECTORY" },
+			{ 0x20, "ARCHIVE" }
+		};
+		
+		for(int i = 0; i < 6; i++)  {
+			if(dir->flags & flags[i].flag) {
+				Console::main << ", " << flags[i].name;
+			}
+		}
 		
 		Console::main 
 			<< " " << bin((uint32_t)dir->flags) 
