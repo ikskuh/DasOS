@@ -18,5 +18,7 @@ boot.img:
 		/boot/syslinux/menu.c32 \
 		/boot/syslinux/mboot.c32 \
 		::
+	mmd -i boot.img ::/resource
+	mcopy -i boot.img resources/* ::/resource/
 	syslinux boot.img
 	mdir -i boot.img ::

@@ -7,7 +7,7 @@ graphics and sound. All programs will run in fullscreen with a small OS status b
 
 ## Planned Features
 
-- FAT32 Driver (*pending*)
+- FAT12/16 Driver (*pending*)
 - Keyboard Input
 - Sound Driver (*pending*)
 - Network (IP)
@@ -53,7 +53,7 @@ The kernel will export all required functions via simple calls, no syscall inter
 
 ### 0.5
 - Block Device Driver
-- FAT32 Driver
+- FAT12/16 Driver (FAT32 is done later)
 - Kernel File System API
 
 ### 0.55

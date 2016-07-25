@@ -23,12 +23,12 @@ typedef struct {
 	uint8_t reserved;
 	uint8_t extendedBootSignature; // should be 0x29
 	uint32_t filesystemID;
-	char filesystemName[11];
-	char fatName[8];
+	uint8_t filesystemName[11];
+	uint8_t fatName[8];
 } __attribute__ ((packed)) fat16header_t;
 
 typedef struct {
-	char name[11];
+	uint8_t name[11];
 	uint8_t flags;
 	uint8_t ntReserved;
 	uint8_t creationTimeFine;
@@ -107,11 +107,15 @@ void fat_test(ATADevice & ata)
 	
 	Console::main << rootLen << ", " << (rootLen >> 9) << "\n";
 	
-	directory_t *dir =  (directory_t*)directory;
+	directory_t *dir = (directory_t*)directory;
 	for(uint32_t i = 0; i < header->rootMaxSize; i++, dir++) {
 		
-		// skip            empty                   removed
-		if(dir->name[0] == 0x00 || dir->name[0] == 0xE5) {
+		// stop on empty 
+		if(dir->name[0] == 0x00) {
+			break;
+		}
+		// skip removed
+		if(dir->name[0] == 0xE5) {
 			continue;
 		}
 		
@@ -119,22 +123,20 @@ void fat_test(ATADevice & ata)
 		Console::main.write(&dir->name[0], 8);
 		Console::main.put('.');
 		Console::main.write(&dir->name[8], 3);
+		Console::main.put(' ');
 		
-		struct {
-			uint8_t flag;
-			const char *name;
-		} flags[] {
-			{ 0x01, "READ_ONLY" }, 
-			{ 0x02, "HIDDEN" },
-			{ 0x04, "SYSTEM" },
-			{ 0x08, "VOLUME_ID" },
-			{ 0x10, "DIRECTORY" },
-			{ 0x20, "ARCHIVE" }
-		};
+		const char *flagNames = "RHSVDA67";
 		
-		for(int i = 0; i < 6; i++)  {
-			if(dir->flags & flags[i].flag) {
-				Console::main << ", " << flags[i].name;
+		if(dir->flags == 0x0F) {
+			Console::main << "long names not supported.\n";
+			continue;
+		}
+		
+		for(int i = 0; i < 8; i++)  {
+			if(dir->flags & (1<<i)) {
+				Console::main.put(flagNames[i]);
+			} else {
+				Console::main.put(' ');
 			}
 		}
 		
@@ -142,7 +144,6 @@ void fat_test(ATADevice & ata)
 			<< " " << bin((uint32_t)dir->flags) 
 			<< " " << (uint32_t)dir->firstClusterL 
 			<< " " << (uint32_t)dir->size << "\n";
-	
 	}
 
 }
