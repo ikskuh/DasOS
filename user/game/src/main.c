@@ -24,30 +24,43 @@ extern color_t iso_gras[];
 void main()
 {
 	color_t background = { 32, 64, 192};
-	video_clear(background);
 	
-	// TODO: Implement game
+	int x = 64;
+	int y = 25 + 38;
 	
-	sprite_t gras = { 32, 32, 32, iso_gras };
-	sprite_t tree = { 32, 32, 32, iso_tree };
+	while(true)
+	{
+		if(is_pressed(VK_W)) y--;
+		if(is_pressed(VK_S)) y++;
+		
+		if(is_pressed(VK_A)) x--;
+		if(is_pressed(VK_D)) x++;
 	
-	int lh = 19;
-	for(int i = 0; i < 3; i++) {
-		blit_sprite(&gras, 16, 16 + lh * i);
-		blit_sprite(&gras, 48, 16 + lh * i);
-		blit_sprite(&gras, 80, 16 + lh * i);
-		blit_sprite(&gras, 112, 16 + lh * i);
-		blit_sprite(&gras, 32, 25 + lh * i);
-		blit_sprite(&gras, 64, 25 + lh * i);
-		blit_sprite(&gras, 96, 25 + lh * i);
+		video_clear(background);
+		
+		// TODO: Implement game
+		
+		sprite_t gras = { 32, 32, 32, iso_gras };
+		sprite_t tree = { 32, 32, 32, iso_tree };
+		
+		int lh = 19;
+		for(int i = 0; i < 3; i++) {
+			blit_sprite(&gras, 16, 16 + lh * i);
+			blit_sprite(&gras, 48, 16 + lh * i);
+			blit_sprite(&gras, 80, 16 + lh * i);
+			blit_sprite(&gras, 112, 16 + lh * i);
+			blit_sprite(&gras, 32, 25 + lh * i);
+			blit_sprite(&gras, 64, 25 + lh * i);
+			blit_sprite(&gras, 96, 25 + lh * i);
+		}
+		blit_sprite(&gras, 48, 72);
+		blit_sprite(&gras, 80, 72);
+		blit_sprite(&gras, 64, 80);
+		
+		blit_sprite(&tree, x, y);
+		
+		video_swap();
 	}
-	blit_sprite(&gras, 48, 72);
-	blit_sprite(&gras, 80, 72);
-	blit_sprite(&gras, 64, 80);
-	
-	blit_sprite(&tree, 64, 25 + lh * 2);
-	
-	video_swap();
 	
 	while(1);
 }

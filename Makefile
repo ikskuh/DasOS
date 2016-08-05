@@ -14,6 +14,7 @@ boot.img:
 		kernel/DasOS \
 		user/demo/demo \
 		user/game/game \
+		resources/textfile.txt \
 		syslinux.cfg \
 		/boot/syslinux/libcom32.c32 \
 		/boot/syslinux/libutil.c32 \

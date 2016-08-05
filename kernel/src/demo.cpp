@@ -44,6 +44,71 @@ typedef struct {
 
 #define TEST(x) if((x) != ATAError::Success) { Console::main << #x " << failed.\n"; while(true); }
 
+uint8_t loadFileBlock[512];
+
+unsigned char FAT_table[512 * 9];
+
+uint32_t get_next_cluster(uint32_t cluster)
+{
+	uint32_t first_fat_sector = 0;
+	uint32_t section_size = 2048;
+	unsigned int fat_offset = cluster + (cluster / 2);// multiply by 1.5
+	unsigned int fat_sector = first_fat_sector + (fat_offset / section_size);
+	unsigned int ent_offset = fat_offset % section_size;
+	 
+	//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
+	uint16_t *ptr = (uint16_t*)&FAT_table[ent_offset];
+	unsigned short table_value = *ptr;
+	if(cluster & 0x0001)
+		table_value = table_value >> 4;
+	else
+		table_value = table_value & 0x0FFF;
+	return table_value;
+}
+
+void load_file(ATADevice & ata, directory_t const & file, uint32_t off)
+{
+	Console::main << "BEGIN(READ_FILE)\n";
+	
+	uint32_t currentCluster = (file.firstClusterH << 16) | file.firstClusterL;
+	int32_t size = file.size;
+	Console::main
+		<< "Size:          " << size << "\n"
+		<< "First Cluster: " << currentCluster << "\n"
+		;
+	
+	Console::main << "DATA:\n";
+	
+	while(size > 0) {
+	
+		TEST(ata.read(loadFileBlock, off + currentCluster, 0x01))
+		
+		Console::main.write(
+			loadFileBlock,
+			size > 512 ? 512 : size);
+		
+		currentCluster = get_next_cluster(currentCluster);
+		
+		if(currentCluster >= 0xFF8) {
+			break;
+		}
+	
+		size -= 512;
+	}
+	
+	Console::main << "\nRemaining size: " << size << "\n";
+	
+	Console::main << "END(READ_FILE)\n";
+}
+
+bool strcmpn(char const *a, char const *b, int len) 
+{
+	for(int i = 0; i < len; i++) {
+		if(a[i] != b[i]) return false;
+	}
+	return true;
+}
+
 void fat_test(ATADevice & ata)
 {
 	uint8_t bootsector[512];
@@ -103,6 +168,15 @@ void fat_test(ATADevice & ata)
 	uint32_t rootLen = sizeof(directory_t) * header->rootMaxSize;
 	uint8_t directory[rootLen];
 	
+	uint32_t fileStart = 
+		header->reservedSectors + 
+		header->numTables * header->fatSize + 
+		(rootLen >> 9) -
+		2;
+	
+	Console::main << "Read total FAT...\n";
+	TEST(ata.read(FAT_table, header->reservedSectors, header->fatSize))
+	
 	TEST(ata.read(directory, header->reservedSectors + header->numTables * header->fatSize, rootLen >> 9))
 	
 	Console::main << rootLen << ", " << (rootLen >> 9) << "\n";
@@ -144,8 +218,11 @@ void fat_test(ATADevice & ata)
 			<< " " << bin((uint32_t)dir->flags) 
 			<< " " << (uint32_t)dir->firstClusterL 
 			<< " " << (uint32_t)dir->size << "\n";
+		
+		if(strcmpn((char*)dir->name, "TEXTFILETXT", 11)) {
+			load_file(ata, *dir, fileStart);
+		}
 	}
-
 }
 
 
