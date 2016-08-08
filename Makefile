@@ -15,6 +15,7 @@ boot.img:
 		user/demo/demo \
 		user/game/game \
 		resources/textfile.txt \
+		kernel/src/demo.cpp \
 		syslinux.cfg \
 		/boot/syslinux/libcom32.c32 \
 		/boot/syslinux/libutil.c32 \
@@ -26,3 +27,8 @@ boot.img:
 	mcopy -i boot.img resources/* ::/resource/
 	syslinux boot.img
 	mdir -i boot.img ::
+
+run:
+	qemu-system-i386 \
+		-serial stdio \
+		-drive file=boot.img,media=disk,format=raw,if=ide

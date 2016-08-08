@@ -1,50 +1,9 @@
 #include "console.hpp"
-
 #include "ata.hpp"
-
-typedef struct {
-	char oemName[8];
-	uint16_t sectorSize;
-	uint8_t clusterSize;
-	uint16_t reservedSectors;
-	uint8_t numTables;
-	uint16_t rootMaxSize;
-	uint16_t numSectors;
-	uint8_t mediaType;
-	uint16_t fatSize;
-	uint16_t trackSize;
-	uint16_t numHeads;
-	uint32_t sectorOffset;
-	uint32_t numSectorsLarge;
-} __attribute__ ((packed)) fatheader_t;
-
-typedef struct {
-	uint8_t biosDriveNum;
-	uint8_t reserved;
-	uint8_t extendedBootSignature; // should be 0x29
-	uint32_t filesystemID;
-	uint8_t filesystemName[11];
-	uint8_t fatName[8];
-} __attribute__ ((packed)) fat16header_t;
-
-typedef struct {
-	uint8_t name[11];
-	uint8_t flags;
-	uint8_t ntReserved;
-	uint8_t creationTimeFine;
-	uint16_t creationTime;
-	uint16_t creationDate;
-	uint16_t lastAccessDate;
-	uint16_t firstClusterH;
-	uint16_t writeTime;
-	uint16_t writeDate;
-	uint16_t firstClusterL;
-	uint32_t size;
-} __attribute__ ((packed))  directory_t;
+#include "fat.h"
+#include "fs.h"
 
 #define TEST(x) if((x) != ATAError::Success) { Console::main << #x " << failed.\n"; while(true); }
-
-uint8_t loadFileBlock[512];
 
 unsigned char FAT_table[512 * 9];
 
@@ -68,13 +27,15 @@ uint32_t get_next_cluster(uint32_t cluster)
 
 void load_file(ATADevice & ata, directory_t const & file, uint32_t off)
 {
+	static uint8_t loadFileBlock[512];
 	Console::main << "BEGIN(READ_FILE)\n";
 	
 	uint32_t currentCluster = (file.firstClusterH << 16) | file.firstClusterL;
 	int32_t size = file.size;
 	Console::main
-		<< "Size:          " << size << "\n"
-		<< "First Cluster: " << currentCluster << "\n"
+		<< "Size:           " << size << "\n"
+		<< "First Cluster:  " << currentCluster << "\n"
+		<< "Cluster Offset: " << off << "\n"
 		;
 	
 	Console::main << "DATA:\n";
@@ -219,40 +180,18 @@ void fat_test(ATADevice & ata)
 			<< " " << (uint32_t)dir->firstClusterL 
 			<< " " << (uint32_t)dir->size << "\n";
 		
-		if(strcmpn((char*)dir->name, "TEXTFILETXT", 11)) {
+		if(strcmpn((char*)dir->name, "DEMO    CPP", 11)) {
 			load_file(ata, *dir, fileStart);
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	
 
 
 void dasos_demo()
 {
+	/*
 	Console::main << "Detecting ATA0 master.\n";
-	
 	ATADevice ata0(0x1F0, true);
 
 	Console::main << "Check for availability...\n";
@@ -268,6 +207,13 @@ void dasos_demo()
 	}
 		
 	fat_test(ata0);
+	*/
+	
+	fs_init();
+	
+	int fd = fs_open("C:/resource/kekse/mario.exe");
+	
+	Console::main << "Opened file " << (int32_t)fd << " \n";
 	
 	while(true);
 
