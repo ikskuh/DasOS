@@ -3,6 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+ * Maximum length of a file name.
+ */ 
+#define FILENAME_MAXLEN 13 // 8 + . + 3 + \0
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -169,6 +174,45 @@ typedef struct {
 	 */
 	uint32_t bpp;
 } videomode_t;
+
+/**
+ * An enum listing all possible file types.
+ */
+typedef enum filetype
+{
+	/**
+	 * The file type is not known to the system and may be supported later.
+	 */
+	ftUnknown = 0, 
+	/**
+	 * The file is a simple data file.
+	 */
+	ftFile = 1, 
+	/**
+	 * The file is a directory.
+	 */
+	ftDirectory = 2,
+	/**
+	 * The file is not a valid file.
+	 */
+	ftInvalid = 99,
+} filetype_t;
+
+/**
+ * A node of the file system.
+ */
+typedef struct fsnode
+{
+	/**
+	 * The name of the file
+	 */
+	char name[FILENAME_MAXLEN];
+	
+	/**
+	 * The type of the file
+	 */
+	enum filetype type;
+} fsnode_t;
 
 #if defined(__cplusplus)
 }

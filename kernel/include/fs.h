@@ -1,26 +1,11 @@
 #pragma once
 
-#define FILENAME_MAXLEN 13 // 8 + . + 3 + \0
+#include "types.h"
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
-
-typedef enum filetype
-{
-	ftUnknown = 0, 
-	ftFile = 1, 
-	ftDirectory = 2,
-	ftInvalid = 99,
-} filetype_t;
-
-
-typedef struct node
-{
-	char name[FILENAME_MAXLEN];
-	enum filetype type;
-} node_t;
 
 /**
  * Opens a file and gets a file handle.
@@ -38,7 +23,7 @@ enum filetype fs_type(int file);
  * @param node The target structure where the information will be stored.
  * @return     true on success, false when error
  */
-bool fs_info(int file, struct node * node);
+bool fs_info(int file, struct fsnode * node);
 
 /**
  * Releases a file handle.
@@ -81,7 +66,7 @@ uint32_t dir_length(int file);
  * @return      true if the entry is valid, false if not.
  * @remarks     If the directory entry does not exist, the node will have the type ftInvalid.
  */
-bool dir_get(int file, int index, struct node * node);
+bool dir_get(int file, int index, struct fsnode * node);
 
 #if defined(__cplusplus)
 }

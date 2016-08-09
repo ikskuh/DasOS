@@ -22,7 +22,7 @@ void dasos_demo()
 	}
 	Console::main << "\n";
 
-	struct node info;
+	struct fsnode info;
 	if(fs_info(fd, &info)) {
 		Console::main << "File Name:" << info.name << "\n";
 		if(info.type != type)  {
@@ -52,7 +52,7 @@ void dasos_demo()
 		for(uint32_t i = 0; i < count; i++) {
 			Console::main << "[" << i << "] ";
 			
-			struct node entry;
+			struct fsnode entry;
 			if(dir_get(fd, i, &entry) == false) {
 				Console::main << "INVALID\n";
 				continue;

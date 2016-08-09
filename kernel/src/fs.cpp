@@ -491,7 +491,7 @@ static void beautifyFileName(char *target, const uint8_t *src)
 	target[cursor] = 0;
 }
 
-extern "C" bool fs_info(int file, struct node * node)
+extern "C" bool fs_info(int file, struct fsnode * node)
 {
 	if(node == NULL)
 		return false;
@@ -594,7 +594,7 @@ extern "C" uint32_t dir_length(int file)
 	return files[file].length;
 }
 
-extern "C" bool dir_get(int file, int index, struct node * node)
+extern "C" bool dir_get(int file, int index, struct fsnode * node)
 {
 	if(node == NULL)
 		return false;

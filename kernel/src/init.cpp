@@ -14,6 +14,7 @@
 #include "keyboard.hpp"
 #include "video.hpp"
 #include "timer.hpp"
+#include "fs.h"
 
 static const uint32_t USERSTART = 0x40000000;
 
@@ -319,5 +320,17 @@ struct syscalls SYSCALLS =
 	&video_swap,
 	&timer_get,
 	&timer_reset,
+	
+	&fs_open,
+	&fs_type,
+	&fs_info,
+	&fs_close,
+	
+	&file_read,
+	&file_size,
+	
+	&dir_length,
+	&dir_get,
+	
 	&_puts,
 };
