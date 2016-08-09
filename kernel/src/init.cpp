@@ -112,6 +112,7 @@ extern "C" void init(multiboot::Structure const & mb)
 	
 	timer_init();
 	kbd_init();
+	fs_init();
 	
 	ASM::sti();
 	

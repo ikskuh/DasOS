@@ -83,13 +83,13 @@ static void read_cluster(void *memory, uint32_t sector)
 	for(int i = 0; i < CACHE_SIZE; i++)
 	{
 		if(cache[i].sector == sector) {
-			Console::main << "[CR:" << sector << "]";
+			// Console::main << "[CR:" << sector << "]";
 			memcpy(memory, cache[i].data, SECTOR_SIZE);
 			cache_age(i); // Age all other cache entries
 			return;
 		}
 	}
-	Console::main << "[CW:" << sector << "]";
+	// Console::main << "[CW:" << sector << "]";
 	int idx = cache_oldest();
 	ATA_CHECKED(ata.read(cache[idx].data, sector, FATHeader.clusterSize))
 	cache[idx].sector = sector;

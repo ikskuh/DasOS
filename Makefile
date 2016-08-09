@@ -14,6 +14,7 @@ boot.img:
 		kernel/DasOS \
 		user/demo/demo \
 		user/game/game \
+		user/filedemo/filedemo \
 		resources/textfile.txt \
 		kernel/src/demo.cpp \
 		syslinux.cfg \
