@@ -13,6 +13,7 @@
 struct FileHandleBackend
 {
 	bool isOpen;
+	bool isRootDir;
 	enum filetype type;
 	struct directory entry;
 	uint32_t length; // number of entries in directory or file length in bytes
@@ -133,6 +134,12 @@ static uint32_t getCluster(struct directory *dir)
 	return (dir->firstClusterH << 16) | dir->firstClusterL;
 }
 
+static void read_cluster(void *memory, uint32_t sector)
+{
+	Console::main << "Read sector: " << sector << "\n";
+	ATA_CHECKED(ata.read(memory, sector, FATHeader.clusterSize))
+}
+
 static struct directory get_directory_entry(
 	struct directory *dir, 
 	uint32_t index,
@@ -146,23 +153,27 @@ static struct directory get_directory_entry(
 	uint32_t clusterIndex = index / clusterLength;
 	uint32_t clusterOffset = index % clusterLength;
 	
+	/*
 	Console::main
 		<< "Start Cluster: " << cluster << "\n"
 		<< "Cluster Index: " << clusterIndex << "\n"
 		<< "Cluster Offset: " << clusterOffset << "\n";
+	//*/
 	
 	for(uint32_t i = 0; i < clusterIndex; i++) {
 		uint32_t next = getNextCluster(cluster);;
-		Console::main
-			<< "[" << cluster << "] -> [" << next << "]\n";
+		// Console::main << "[" << cluster << "] -> [" << next << "]\n";
 		cluster = next;
+		// End Marker
+		if(cluster >= 0xFF8) {
+			return (struct directory){ 0 };
+		}
 	}
 	
 	struct directory entries[clusterLength];
 	
 	uint32_t sector = clusterToSector(cluster);
-	Console::main << "Read sector: " << sector << "\n";
-	ATA_CHECKED(ata.read(entries, sector, FATHeader.clusterSize))
+	read_cluster(entries, sector);
 	
 	return entries[clusterOffset];
 }
@@ -196,6 +207,21 @@ static struct directory search_directory(
 	}
 }
 
+
+static uint32_t get_directory_length(
+	struct directory *dir, 
+	uint32_t (*getNextCluster)(uint32_t sector),
+	uint32_t (*clusterToSector)(uint32_t addr))
+{
+	for(uint32_t i = 0; ; i++)
+	{
+		struct directory result = get_directory_entry(dir, i, getNextCluster, clusterToSector);
+		if(result.name[0] == 0) {
+			return i;
+		}
+	}
+}
+
 static char toUpper(char c)
 {
 	if(c >= 'a' && c <= 'z') {
@@ -221,7 +247,6 @@ static char const * extract_first_name(char *fileName, char const * path)
 		}
 		char c = toUpper(*path++);
 		if(c == '.') {
-			Console::main << "path with .\n";
 			// pad with spaces
 			for(; cursor < 8; cursor++) {
 				fileName[cursor] = ' ';
@@ -265,14 +290,40 @@ static uint32_t getSectorForCluster(uint32_t cluster)
 	return firstClusterSector + FATHeader.clusterSize * cluster;
 }
 
+static enum filetype typeFromEntry(struct directory const * entry)
+{
+	if(entry->flags & ffDirectory) {
+		return ftDirectory;
+	} else if ((entry->flags & ffVolumeID) == 0) {
+		return ftFile;
+	} else {
+		return ftUnknown;
+	}
+}
+
 extern "C" int fs_open(char const * path)
 {
 	if(path[0] != 'C' || path[1] != ':') return 0; /* only one drive supported */
 	path += 2; // skip drive specification
 	if(path[0] != '/') return 0;
 	
+	int fd = 0;
+	// Allocate a file entry.
+	for(int i = 1; i <= FHB_MAX; i++)
+	{
+		if(files[i].isOpen) {
+			continue;
+		}
+		fd = i;
+		break;
+	}
+	if(fd == 0) {
+		return 0;
+	}
+	
 	// todo: find the correct directory_t entry
 	struct directory entry = rootDirectory;
+	bool isRootDir = true;
 	
 	if(path[1] != 0) // Check if we have any specific path
 	{	
@@ -313,29 +364,33 @@ extern "C" int fs_open(char const * path)
 			// then follow up with Fat12 FAT indexing
 			getNextCluster = &getNextClusterFat12;
 			clusterToSector = &getSectorForCluster;
+			isRootDir = false;
 		}
 		Console::main << "open now.\n";
 	}
 	
-	// Allocate a file entry.
-	for(int i = 1; i <= FHB_MAX; i++)
-	{
-		if(files[i].isOpen) {
-			continue;
-		}
-		files[i].isOpen = true;
-		files[i].entry = entry;
-		files[i].type = ftUnknown;
-		if(entry.flags & ffDirectory) {
-			files[i].type = ftDirectory;
-		} else if ((entry.flags & ffVolumeID) == 0) {
-			files[i].type = ftFile;
+	files[fd].isOpen = true;
+	files[fd].isRootDir = false;
+	files[fd].entry = entry;
+	files[fd].type = ftUnknown;
+	files[fd].length = 0;
+	
+	files[fd].type = typeFromEntry(&entry);
+	
+	if(files[fd].type == ftDirectory) {
+		files[fd].isRootDir = isRootDir;
+		if(isRootDir) {
+			files[fd].length = get_directory_length(&entry, &increment, &identity);
+		} else {
+			files[fd].length = get_directory_length(&entry, &getNextClusterFat12, &getSectorForCluster);
 		}
 		
-		return i;
+	} else if (files[fd].type == ftFile) {
+		files[fd].type = ftFile;
+		files[fd].length = entry.size;
 	}
-	
-	return 0;
+
+	return fd;
 }
 
 extern "C" enum filetype fs_type(int file)
@@ -346,6 +401,30 @@ extern "C" enum filetype fs_type(int file)
 		return files[file].type;
 	else
 		return ftInvalid;
+}
+
+static void beautifyFileName(char *target, const uint8_t *src)
+{
+	int namelen = 0;
+	for(int i = 0; i < 8; i++) {
+		if(src[i] != ' ') {
+			namelen = i + 1;
+		}
+	}
+	int cursor = 0;
+	for(int i = 0; i < namelen; i++) {
+		target[cursor++] = src[i];
+	}
+	if(src[8] != ' ')
+	{ // append extension if any
+		target[cursor++] = '.';
+		for(int i = 0; i < 3; i++) {
+			char c = src[8 + i];
+			if(c == ' ') break;
+			target[cursor++] = c;
+		}
+	}
+	target[cursor] = 0;
 }
 
 extern "C" bool fs_info(int file, struct node * node)
@@ -361,24 +440,7 @@ extern "C" bool fs_info(int file, struct node * node)
 		node->name[i] = 0;
 	}
 	struct directory *entry = &files[file].entry;
-	
-	int namelen = 0;
-	for(int i = 0; i < 8; i++) {
-		if(entry->name[i] != ' ') {
-			namelen = i + 1;
-		}
-	}
-	int cursor = 0;
-	for(int i = 0; i < namelen; i++) {
-		node->name[cursor++] = entry->name[i];
-	}
-	node->name[cursor++] = '.';
-	for(int i = 0; i < 3; i++) {
-		char c = entry->name[8 + i];
-		if(c == ' ') break;
-		node->name[cursor++] = c;
-	}
-	node->name[cursor] = 0;
+	beautifyFileName(node->name, entry->name);
 	node->type = files[file].type;
 	return true;
 }
@@ -409,4 +471,31 @@ extern "C" uint32_t dir_length(int file)
 	return files[file].length;
 }
 
-extern "C" bool dir_get(int file, int index, struct node * node);
+extern "C" bool dir_get(int file, int index, struct node * node)
+{
+	if(node == NULL)
+		return false;
+	if(file > FHB_MAX)
+		return false;
+	if(files[file].type != ftDirectory)
+		return false;
+	
+	struct directory entry;
+	
+	if(files[file].isRootDir) {
+		entry = get_directory_entry(
+			&files[file].entry,
+			index,
+			&increment,
+			&identity);
+	} else {
+		entry = get_directory_entry(
+			&files[file].entry,
+			index,
+			&getNextClusterFat12,
+			&getSectorForCluster);
+	}
+	beautifyFileName(node->name, entry.name);
+	node->type = typeFromEntry(&entry);
+	return true;
+}

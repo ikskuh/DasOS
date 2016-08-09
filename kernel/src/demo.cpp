@@ -211,7 +211,7 @@ void dasos_demo()
 	
 	fs_init();
 	
-	int fd = fs_open("C:/resource/image.png");
+	int fd = fs_open("C:/resource");
 	
 	Console::main << "Opened file " << (int32_t)fd << " of type ";
 	
@@ -234,6 +234,34 @@ void dasos_demo()
 		}
 	} else {
 		Console::main << "Failed to get file info.\n";
+	}
+	
+	if(type == ftFile)
+	{
+		// dump the file to the console
+		
+	}
+	else if(type == ftDirectory)
+	{
+		// Do a directory listing
+		uint32_t count = dir_length(fd);
+		for(uint32_t i = 0; i < count; i++) {
+			Console::main << "[" << i << "] ";
+			
+			struct node entry;
+			if(dir_get(fd, i, &entry) == false) {
+				Console::main << "INVALID\n";
+				continue;
+			}
+			switch(entry.type) {
+				case ftInvalid: Console::main << "INV "; break;
+				case ftFile: Console::main << "FILE"; break;
+				case ftDirectory: Console::main << "DIR "; break;
+				case ftUnknown: Console::main << "UNKN"; break;
+				default: Console::main << "??? "; break;
+			}
+			Console::main << " '" << entry.name << "'\n";
+		}
 	}
 	
 	while(true);
