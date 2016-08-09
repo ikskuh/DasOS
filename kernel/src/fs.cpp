@@ -15,6 +15,7 @@ struct FileHandleBackend
 	bool isOpen;
 	enum filetype type;
 	struct directory entry;
+	uint32_t length; // number of entries in directory or file length in bytes
 };
 
 FileHandleBackend files[FHB_MAX + 1]; // 0 is invalid.
@@ -26,7 +27,12 @@ struct directory rootDirectory;
 struct fatheader   FATHeader;
 struct fatheader16 FATExtendedHeader;
 
+#define SECTOR_SIZE (FATHeader.sectorSize)
+#define CLUSTER_SIZE (SECTOR_SIZE * FATHeader.clusterSize)
+
 uint8_t FAT[512 * 9];
+
+uint32_t firstClusterSector;
 
 void fs_init()
 {
@@ -84,7 +90,17 @@ void fs_init()
 	Console::main << "Read total FAT...\n";
 	ATA_CHECKED(ata.read(FAT, FATHeader.reservedSectors, FATHeader.fatSize))
 	
-	{
+	
+	uint32_t rootLen = sizeof(directory_t) * FATHeader.rootMaxSize;
+	{ // Initialize FAT sector offset
+		firstClusterSector = 
+			FATHeader.reservedSectors + 
+			FATHeader.numTables * FATHeader.fatSize + 
+			(rootLen / CLUSTER_SIZE) -
+			2;
+		Console::main << "Start of clusters:" << firstClusterSector << "\n";
+	}
+	{ // Initialize root directory
 		uint32_t rootStart = FATHeader.reservedSectors + FATHeader.numTables * FATHeader.fatSize;
 		rootDirectory = (struct directory) {
 			"ROOTDIRDIR", // uint8_t name[11];
@@ -100,6 +116,83 @@ void fs_init()
 			(uint16_t)(rootStart & 0xFFFF), // uint16_t firstClusterL;
 			0, // uint32_t size;
 		};
+	}
+	
+}
+
+static bool strcmpn(char const *a, char const *b, int len) 
+{
+	for(int i = 0; i < len; i++) {
+		if(a[i] != b[i]) return false;
+	}
+	return true;
+}
+
+static uint32_t getCluster(struct directory *dir)
+{
+	return (dir->firstClusterH << 16) | dir->firstClusterL;
+}
+
+static struct directory get_directory_entry(
+	struct directory *dir, 
+	uint32_t index,
+	uint32_t (*getNextCluster)(uint32_t sector),
+	uint32_t (*clusterToSector)(uint32_t addr))
+{
+	const uint32_t clusterLength = (CLUSTER_SIZE / sizeof(struct directory));
+	
+	uint32_t cluster = getCluster(dir);
+	
+	uint32_t clusterIndex = index / clusterLength;
+	uint32_t clusterOffset = index % clusterLength;
+	
+	Console::main
+		<< "Start Cluster: " << cluster << "\n"
+		<< "Cluster Index: " << clusterIndex << "\n"
+		<< "Cluster Offset: " << clusterOffset << "\n";
+	
+	for(uint32_t i = 0; i < clusterIndex; i++) {
+		uint32_t next = getNextCluster(cluster);;
+		Console::main
+			<< "[" << cluster << "] -> [" << next << "]\n";
+		cluster = next;
+	}
+	
+	struct directory entries[clusterLength];
+	
+	uint32_t sector = clusterToSector(cluster);
+	Console::main << "Read sector: " << sector << "\n";
+	ATA_CHECKED(ata.read(entries, sector, FATHeader.clusterSize))
+	
+	return entries[clusterOffset];
+}
+
+static struct directory search_directory(
+	struct directory *dir, 
+	char const * name,
+	uint32_t (*getNextCluster)(uint32_t sector),
+	uint32_t (*clusterToSector)(uint32_t addr))
+{
+	for(uint32_t i = 0; ; i++)
+	{
+		struct directory result = get_directory_entry(dir, i, getNextCluster, clusterToSector);
+		if(result.name[0] == 0) {
+			return result;
+		}
+		if(result.name[0] == 0xE5) {
+			// skip deleted entries
+			continue;
+		}
+		if(result.flags == ffLongName) {
+			// todo: implement long name support.
+			// store long name here
+			continue;
+		}
+		if(strcmpn((char*)result.name, name, 11) == true) {
+			// todo: apply long name here
+			return result;
+		}
+		// todo: reset long name here
 	}
 }
 
@@ -145,6 +238,33 @@ static char const * extract_first_name(char *fileName, char const * path)
 	return path;
 }
 
+static uint32_t increment(uint32_t i) { return i + 1; }
+
+static uint32_t identity(uint32_t addr) { return addr; }
+
+static uint32_t getNextClusterFat12(uint32_t cluster)
+{
+	uint32_t first_fat_sector = 0;
+	uint32_t section_size = 2048;
+	unsigned int fat_offset = cluster + (cluster / 2);// multiply by 1.5
+	unsigned int fat_sector = first_fat_sector + (fat_offset / section_size);
+	unsigned int ent_offset = fat_offset % section_size;
+	 
+	//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
+	uint16_t *ptr = (uint16_t*)&FAT[ent_offset];
+	unsigned short table_value = *ptr;
+	if(cluster & 0x0001)
+		table_value = table_value >> 4;
+	else
+		table_value = table_value & 0x0FFF;
+	return table_value;
+}
+
+static uint32_t getSectorForCluster(uint32_t cluster)
+{
+	return firstClusterSector + FATHeader.clusterSize * cluster;
+}
+
 extern "C" int fs_open(char const * path)
 {
 	if(path[0] != 'C' || path[1] != ':') return 0; /* only one drive supported */
@@ -154,20 +274,47 @@ extern "C" int fs_open(char const * path)
 	// todo: find the correct directory_t entry
 	struct directory entry = rootDirectory;
 	
-	if(path[1] != 0)
+	if(path[1] != 0) // Check if we have any specific path
 	{	
 		char fileName[FILENAME_MAXLEN];
 		
-		while(path != NULL)
+		// initialize with root directory search
+		uint32_t (*getNextCluster)(uint32_t sector) = &increment;
+		uint32_t (*clusterToSector)(uint32_t addr) = &identity;
+		while(*path != 0)
 		{
+			if((entry.flags & ffDirectory) == 0) {
+				// trying to index a file, won't work
+				Console::main << "The file is not a directory.\n";
+				return 0;
+			}
 			if((path = extract_first_name(fileName, path)) == NULL)
 			{
 				return 0;
 			}
-			Console::main << "FN:  '" << fileName << "'\n";
-			Console::main << "PTH: '" << path     << "'\n";
-		
+			struct directory next = search_directory(
+				&entry,
+				fileName,
+				getNextCluster, 
+				clusterToSector);
+			if(next.name[0] == 0x00) {
+				Console::main << "file not found.\n";
+				return 0;
+			}
+				
+			Console::main << "FN:        '" << fileName << "'\n";
+			Console::main << "PTH:       '" << path     << "'\n";
+			Console::main << "File Name: '";
+			Console::main.write(next.name, 11);
+			Console::main << "'\n";
+			
+			entry = next;
+			
+			// then follow up with Fat12 FAT indexing
+			getNextCluster = &getNextClusterFat12;
+			clusterToSector = &getSectorForCluster;
 		}
+		Console::main << "open now.\n";
 	}
 	
 	// Allocate a file entry.
@@ -182,7 +329,7 @@ extern "C" int fs_open(char const * path)
 		if(entry.flags & ffDirectory) {
 			files[i].type = ftDirectory;
 		} else if ((entry.flags & ffVolumeID) == 0) {
-			files[i].type = ftDirectory;
+			files[i].type = ftFile;
 		}
 		
 		return i;
@@ -201,6 +348,41 @@ extern "C" enum filetype fs_type(int file)
 		return ftInvalid;
 }
 
+extern "C" bool fs_info(int file, struct node * node)
+{
+	if(node == NULL)
+		return false;
+	if(file > FHB_MAX)
+		return false;
+	if(files[file].isOpen == false) {
+		return true;
+	}
+	for(int i = 0; i < FILENAME_MAXLEN; i++) {
+		node->name[i] = 0;
+	}
+	struct directory *entry = &files[file].entry;
+	
+	int namelen = 0;
+	for(int i = 0; i < 8; i++) {
+		if(entry->name[i] != ' ') {
+			namelen = i + 1;
+		}
+	}
+	int cursor = 0;
+	for(int i = 0; i < namelen; i++) {
+		node->name[cursor++] = entry->name[i];
+	}
+	node->name[cursor++] = '.';
+	for(int i = 0; i < 3; i++) {
+		char c = entry->name[8 + i];
+		if(c == ' ') break;
+		node->name[cursor++] = c;
+	}
+	node->name[cursor] = 0;
+	node->type = files[file].type;
+	return true;
+}
+
 extern "C" void fs_close(int file)
 {
 	if(file <= FHB_MAX)
@@ -209,8 +391,22 @@ extern "C" void fs_close(int file)
 
 extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t length);
 
-extern "C" uint32_t file_length(int file);
+extern "C" uint32_t file_length(int file)
+{
+	if(file > FHB_MAX)
+		return 0;
+	if(files[file].type != ftFile)
+		return 0;
+	return files[file].length;
+}
 
-extern "C" uint32_t dir_length(int file);
+extern "C" uint32_t dir_length(int file)
+{
+	if(file > FHB_MAX)
+		return 0;
+	if(files[file].type != ftDirectory)
+		return 0;
+	return files[file].length;
+}
 
 extern "C" bool dir_get(int file, int index, struct node * node);

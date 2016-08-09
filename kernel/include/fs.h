@@ -33,6 +33,14 @@ int fs_open(char const * name);
 enum filetype fs_type(int file);
 
 /**
+ * Gets information about a file handle.
+ * @param file The file handle
+ * @param node The target structure where the information will be stored.
+ * @return     true on success, false when error
+ */
+bool fs_info(int file, struct node * node);
+
+/**
  * Releases a file handle.
  */
 void fs_close(int file);
