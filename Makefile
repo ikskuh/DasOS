@@ -15,6 +15,8 @@ boot.img:
 		user/demo/demo \
 		user/game/game \
 		user/filedemo/filedemo \
+		user/fontdemo/fontdemo \
+		../turtlefont/test.tfn \
 		resources/textfile.txt \
 		kernel/src/demo.cpp \
 		syslinux.cfg \
