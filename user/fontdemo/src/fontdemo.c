@@ -20,29 +20,27 @@ videomode_t videomode;
 
 void load_font(const char *path);
 
-void render_text(char const *text)
+int x, y;
+
+void putc(char c)
 {
-	int x = 8;
-	int y = 8 + tfont_getSize();
-	
-	while(*text)
-	{
-		char c = *text++;
-		if(c == '\n') {
+	if(c == '\n') {
+		x = 8;
+		y += tfont_getLineHeight();
+	} else {
+		if(x + tfont_width(font[(int)c].code) >= videomode.width) {
 			x = 8;
 			y += tfont_getLineHeight();
-		} else {
-			if(x + tfont_width(font[(int)c].code) >= videomode.width) {
-				x = 8;
-				y += tfont_getLineHeight();
-			}	
-			x += tfont_render(x, y, font[(int)c].code);
-		}
+		}	
+		x += tfont_render(x, y, font[(int)c].code);
 	}
 }
 
 void main()
 {
+	x = 8;
+	y = 8 + tfont_getSize();
+	
 	video_getmode(&videomode);
 
 	color_t background = {32, 32, 32};
@@ -54,11 +52,14 @@ void main()
 	tfont_setSize(16);
 	tfont_setDotSize(2);
 	
-	render_text("Wello Horld!");
-	
-	video_swap(); // Required for back buffering
-	
-	while(true);
+	while(true)
+	{
+		char c = getchar();
+		
+		putc(c);
+		
+		video_swap(); // Required for back buffering
+	}
 }
 
 void load_font_next(char c)
