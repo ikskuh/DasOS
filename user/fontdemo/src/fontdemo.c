@@ -18,22 +18,35 @@ struct glyph font[128];
 
 videomode_t videomode;
 
+char screenText[4096] = { 0 };
+int textCursor = 0;
+
 void load_font(const char *path);
 
 int x, y;
 
 void putc(char c)
 {
-	if(c == '\n') {
-		x = 8;
-		y += tfont_getLineHeight();
-	} else {
-		if(x + tfont_width(font[(int)c].code) >= videomode.width) {
-			x = 8;
-			y += tfont_getLineHeight();
-		}	
-		x += tfont_render(x, y, font[(int)c].code);
+	switch(c)
+	{
+		case 8:
+			if(textCursor > 0) {
+				screenText[--textCursor] = 0;
+			}
+			break;
+		default:
+			screenText[textCursor++] = c;
+			screenText[textCursor] = 0;
+			break;
 	}
+}
+
+char const *getGlyph(int cp)
+{
+	if(cp > 127) {
+		return NULL;
+	}
+	return font[cp].code;
 }
 
 void main()
@@ -44,11 +57,11 @@ void main()
 	video_getmode(&videomode);
 
 	color_t background = {32, 32, 32};
-	video_clear(background);
 	
 	load_font("C:/test.tfn");
 	
 	tfont_setPainter(&tput, NULL);
+	tfont_setFont(&getGlyph);
 	tfont_setSize(16);
 	tfont_setDotSize(2);
 	
@@ -58,6 +71,12 @@ void main()
 		
 		putc(c);
 		
+		video_clear(background);
+		tfont_render_string(
+			8, 8 + tfont_getSize(),
+			screenText,
+			videomode.width - 16,
+			tfNone);
 		video_swap(); // Required for back buffering
 	}
 }

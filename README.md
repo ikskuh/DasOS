@@ -7,15 +7,17 @@ graphics and sound. All programs will run in fullscreen with a small OS status b
 
 ## Planned Features
 
-- FAT12/16 Driver (*pending*)
-- Keyboard Input
+- FAT12 Driver (*done*)
+- FAT16 Driver (*pending*)
+- Keyboard Input (*done*)
 - Sound Driver (*pending*)
 - Network (IP)
 	- TCP (*pending*)
 	- UDP (*pending*)
 - Graphical Interface
-	- VBE
+	- VBE (*done*)
 	- TinyGL (*pending*)
+	- Font Rendering (*done*)
 - Graphical Shell
 	- Start program (*pending*)
 	- Options (*pending*)
