@@ -62,9 +62,9 @@ uint32_t file_read(
 	uint32_t length);
 
 /**
- * Returns the length of a file in bytes.
+ * Returns the size of a file in bytes.
  */
-uint32_t file_length(int file);
+uint32_t file_size(int file);
 
 
 /**

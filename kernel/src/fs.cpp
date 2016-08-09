@@ -34,6 +34,7 @@ struct fatheader16 FATExtendedHeader;
 uint8_t FAT[512 * 9];
 
 uint32_t firstClusterSector;
+uint32_t invalidClusterIndex;
 
 void fs_init()
 {
@@ -119,6 +120,8 @@ void fs_init()
 		};
 	}
 	
+	invalidClusterIndex = 0xFF8; // Change for other FATs
+	
 }
 
 static bool strcmpn(char const *a, char const *b, int len) 
@@ -136,7 +139,7 @@ static uint32_t getCluster(struct directory *dir)
 
 static void read_cluster(void *memory, uint32_t sector)
 {
-	Console::main << "Read sector: " << sector << "\n";
+	// Console::main << "Read sector: " << sector << "\n";
 	ATA_CHECKED(ata.read(memory, sector, FATHeader.clusterSize))
 }
 
@@ -165,7 +168,7 @@ static struct directory get_directory_entry(
 		// Console::main << "[" << cluster << "] -> [" << next << "]\n";
 		cluster = next;
 		// End Marker
-		if(cluster >= 0xFF8) {
+		if(cluster >= invalidClusterIndex) {
 			return (struct directory){ 0 };
 		}
 	}
@@ -451,9 +454,68 @@ extern "C" void fs_close(int file)
 		files[file].isOpen = false; // Am i doing this right, daddy?
 }
 
-extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t length);
+extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t length)
+{
+	if(file > FHB_MAX)
+		return 0;
+	if(files[file].type != ftFile)
+		return 0;
+	if(buffer == NULL)
+		return 0;
+	if(length == 0)	
+		return 0;
+	
+	uint32_t cluster = getCluster(&files[file].entry);
+	uint32_t clusterIndex = offset / CLUSTER_SIZE;
+	uint32_t clusterOffset = offset % CLUSTER_SIZE;
+	
+	for(uint32_t i = 0; i < clusterIndex; i++) {
+		cluster = getNextClusterFat12(cluster);
+		if(cluster >= invalidClusterIndex) {
+			return 0; // out of file
+		}
+	}
+	
+	uint8_t *target = (uint8_t*)buffer;
+	uint32_t cursor = 0;
+	while(length > 0)
+	{
+		uint8_t clusterData[CLUSTER_SIZE];
+	
+		Console::main
+			<< "Read: "
+			<< "cluster=" << cluster << ", "
+			<< "idx=" << clusterIndex << ", "
+			<< "off=" << clusterOffset << ", "
+			<< "len=" << length << ", "
+			<< "cur=" << cursor
+			<< "\n";
+		
+		// Read cluster here
+		read_cluster(
+			clusterData,
+			getSectorForCluster(cluster));
+		
+		// Copy data to target
+		for(uint32_t i = clusterOffset; i < CLUSTER_SIZE; i++) {
+			target[cursor++] = clusterData[i];
+			length -= 1;
+			if(length == 0) {
+				return cursor;
+			}
+		}
+		
+		// Move to next cluster
+		clusterOffset = 0;
+		cluster = getNextClusterFat12(cluster);
+		if(cluster >= invalidClusterIndex) {
+			return cursor; // out of file
+		}
+	}
+	return cursor;
+}
 
-extern "C" uint32_t file_length(int file)
+extern "C" uint32_t file_size(int file)
 {
 	if(file > FHB_MAX)
 		return 0;
