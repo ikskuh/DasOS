@@ -3,48 +3,6 @@
 #include "fat.h"
 #include "fs.h"
 
-#define TEST(x) if((x) != ATAError::Success) { Console::main << #x " << failed.\n"; while(true); }
-
-/*
-void load_file(ATADevice & ata, directory_t const & file, uint32_t off)
-{
-	static uint8_t loadFileBlock[512];
-	Console::main << "BEGIN(READ_FILE)\n";
-	
-	uint32_t currentCluster = (file.firstClusterH << 16) | file.firstClusterL;
-	int32_t size = file.size;
-	Console::main
-		<< "Size:           " << size << "\n"
-		<< "First Cluster:  " << currentCluster << "\n"
-		<< "Cluster Offset: " << off << "\n"
-		;
-	
-	Console::main << "DATA:\n";
-	
-	while(size > 0) {
-	
-		TEST(ata.read(loadFileBlock, off + currentCluster, 0x01))
-		
-		Console::main.write(
-			loadFileBlock,
-			size > 512 ? 512 : size);
-		
-		currentCluster = get_next_cluster(currentCluster);
-		
-		if(currentCluster >= 0xFF8) {
-			break;
-		}
-	
-		size -= 512;
-	}
-	
-	Console::main << "\nRemaining size: " << size << "\n";
-	
-	Console::main << "END(READ_FILE)\n";
-}
-*/
-
-
 void dasos_demo()
 {
 	fs_init();
@@ -111,5 +69,4 @@ void dasos_demo()
 	}
 	
 	while(true);
-
 }

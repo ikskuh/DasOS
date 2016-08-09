@@ -36,6 +36,67 @@ uint8_t FAT[512 * 9];
 uint32_t firstClusterSector;
 uint32_t invalidClusterIndex;
 
+#define CACHE_SIZE 64
+#define CACHE_INVALID_SECTOR 0 // Boot sector will not be cached.
+
+struct
+{
+	uint32_t sector;
+	uint32_t age;
+	uint8_t data[1024];
+} cache[CACHE_SIZE];
+
+static inline void memcpy(void *dst, void const * src, uint32_t len)
+{
+	char *d = (char*)dst;
+	char const *s = (char const*)src;
+	while(len-- > 0)
+	{
+		*d++ = *s++;
+	}
+}
+
+static void cache_age(int exclude)
+{
+	for(int i = 0; i < CACHE_SIZE; i++)
+	{
+		if(i == exclude) continue;
+		cache[i].age += 1;
+	}
+	cache[exclude].age = 0;
+}
+
+static int cache_oldest()
+{
+	int idx = 0;
+	for(int i = 1; i < CACHE_SIZE; i++)
+	{
+		if(cache[idx].age < cache[i].age) {
+			idx = i;
+		}
+	}
+	return idx;
+}
+
+static void read_cluster(void *memory, uint32_t sector)
+{
+	for(int i = 0; i < CACHE_SIZE; i++)
+	{
+		if(cache[i].sector == sector) {
+			Console::main << "[CR:" << sector << "]";
+			memcpy(memory, cache[i].data, SECTOR_SIZE);
+			cache_age(i); // Age all other cache entries
+			return;
+		}
+	}
+	Console::main << "[CW:" << sector << "]";
+	int idx = cache_oldest();
+	ATA_CHECKED(ata.read(cache[idx].data, sector, FATHeader.clusterSize))
+	cache[idx].sector = sector;
+	cache_age(idx);
+	memcpy(memory, cache[idx].data, SECTOR_SIZE);
+}
+
 void fs_init()
 {
 	if(ata.isFloating()) {
@@ -122,6 +183,12 @@ void fs_init()
 	
 	invalidClusterIndex = 0xFF8; // Change for other FATs
 	
+	{ // initialize cache
+		for(int i = 0; i < CACHE_SIZE; i++)
+		{
+			cache[i].sector = CACHE_INVALID_SECTOR;
+		}
+	}
 }
 
 static bool strcmpn(char const *a, char const *b, int len) 
@@ -135,12 +202,6 @@ static bool strcmpn(char const *a, char const *b, int len)
 static uint32_t getCluster(struct directory *dir)
 {
 	return (dir->firstClusterH << 16) | dir->firstClusterL;
-}
-
-static void read_cluster(void *memory, uint32_t sector)
-{
-	// Console::main << "Read sector: " << sector << "\n";
-	ATA_CHECKED(ata.read(memory, sector, FATHeader.clusterSize))
 }
 
 static struct directory get_directory_entry(
