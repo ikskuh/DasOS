@@ -132,21 +132,3 @@ void load_font(const char *path)
 	
 	fs_close(fd);
 }
-
-void die(const char *msg)
-{
-	puts("User Panic: ");
-	puts(msg);
-	puts("\n");
-	while(1);
-}
-
-void die_extra(const char *msg, const char *extra)
-{
-	puts("User Panic: ");
-	puts(msg);
-	puts(": ");
-	puts(extra);
-	puts("\n");
-	while(1);
-}
