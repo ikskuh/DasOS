@@ -32,6 +32,10 @@ mainfunction_t load_elf_module(multiboot::Module const & module);
 void dasos_demo();
 
 void secure_multiboot(multiboot::Structure const & mb, void (*fn)(uint32_t addr));
+
+static char currentShell[] = "C:/shell";
+
+static char nextProgram[] = "C:/shell";
 		
 extern "C" void init(multiboot::Structure const & mb)
 {
@@ -114,31 +118,35 @@ extern "C" void init(multiboot::Structure const & mb)
 	ASM::sti();
 	
 	if(mb.modules.length == 0) {
-		Console::main << "No multiboot modules declared, starting shell...\n";
+		Console::main << "No multiboot modules declared, booting OS...\n";
 		
-		mainfunction_t main = load_elf("C:/shell");
-		
-		if(main == NULL)
+		while(true)
 		{
-			Console::main << "Shell not found, starting demo...\n";
-			dasos_demo();
-			return;
+			mainfunction_t main = load_elf(nextProgram);
+			
+			if(main == NULL)
+			{
+				Console::main << nextProgram << " not found, halting...\n";
+				return;
+			}
+			
+			Console::main << "Executing " << nextProgram << "\n";
+			
+			// Reset program to execute 
+			strcpy(nextProgram, currentShell);
+			
+			if(((uint32_t)main) < USERSTART)
+			{
+				Console::main << "Could not find a fitting entry point :(\n";
+				return;
+			}
+			
+			Console::main << "Starting program...\n";
+			{
+				loader_run(main);
+			}
+			Console::main << "Program finished.\n";
 		}
-		
-		if(((uint32_t)main) < USERSTART)
-		{
-			Console::main << "Could not find a fitting entry point :(\n";
-			return;
-		}
-		
-		Console::main << "Starting program...\n";
-		{
-			loader_run(main);
-		}
-		Console::main << "Program finished.\n";
-
-		Console::main << "Maybe restart the shell here, huh?\n";
-		
 		return;
 	}
 	
@@ -328,6 +336,22 @@ extern "C" void get_memlimits(memlimits_t *limits)
 	*limits = { USERSTART, RAMEND };
 }
 
+extern "C" void exec(char const *program)
+{
+	strcpy(nextProgram, program); 
+	SYSCALLS.exit(0); // back to kernel space
+}
+
+extern "C" void os_set_shell(char const * program)
+{
+	strcpy(currentShell, program);
+}
+	
+extern "C" void exit(int errorCode)
+{
+	userspace_exit();
+}
+
 struct syscalls SYSCALLS = 
 {
 	&get_memlimits,
@@ -352,6 +376,10 @@ struct syscalls SYSCALLS =
 	
 	&dir_length,
 	&dir_get,
+	
+	&exec,
+	&os_set_shell,
+	&exit,
 	
 	&_puts,
 };

@@ -1,18 +1,5 @@
 #include "stdlib.h"
-
-void die(const char *msg);
-void die_extra(const char *msg, const char *extra);
-
-
-void exit(int errorCode)
-{
-	static char buffer[128];
-	static char tmp[10];
-	strcpy(buffer, "Program exited with error code ");
-	strcat(buffer, itoa(errorCode, tmp, 10));
-	strcat(buffer, ".\n");
-	die(buffer);
-}
+#include "syscalls.h"
 
 static void reverse(char *str, int length)
 {
@@ -99,7 +86,7 @@ double atod(const char *str)
 
 void *memmove( void *destination, const void *source, size_t num)
 {
-	die("memmove not implemented yet");
+	exit(1);
 	return NULL;
 }
 

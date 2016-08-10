@@ -15,8 +15,6 @@ char *itoa(int value, char *str, int base);
 int atoi(const char *str);
 // float atof(const char *str);
 
-void exit(int errorCode);
-
 static inline void *memset(void *ptr, int value, size_t num)
 {
 	uint8_t *it = (uint8_t*)ptr;

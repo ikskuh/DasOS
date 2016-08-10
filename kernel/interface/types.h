@@ -17,7 +17,7 @@ extern "C" {
  */
 typedef uint32_t codepoint_t;
 
-typedef struct
+typedef struct memlimits
 {
 	/**
 	 * @brief Begin of userspace memory. Should be 0x40000000
@@ -30,50 +30,50 @@ typedef struct
 	uint32_t upper;
 } memlimits_t;
 
-typedef enum
+typedef enum vkey
 {
-	VK_Invalid = 0,
-	VK_Escape,
-	VK_D0, VK_D1, VK_D2,VK_D3, VK_D4, VK_D5, VK_D6, VK_D7, VK_D8, VK_D9,	
-	VK_A, VK_B, VK_C, VK_D, VK_E, VK_F, VK_G, VK_H, VK_I, VK_J, VK_K, VK_L, VK_M, VK_N, VK_O, VK_P, VK_Q, VK_R, VK_S, VK_T, VK_U, VK_V, VK_W, VK_X, VK_Y, VK_Z,
+	vkInvalid = 0,
+	vkEscape,
+	vkD0, vkD1, vkD2,vkD3, vkD4, vkD5, vkD6, vkD7, vkD8, vkD9,	
+	vkA, vkB, vkC, vkD, vkE, vkF, vkG, vkH, vkI, vkJ, vkK, vkL, vkM, vkN, vkO, vkP, vkQ, vkR, vkS, vkT, vkU, vkV, vkW, vkX, vkY, vkZ,
 	
 	// "\\",
 	// "`",
-	VK_Backspace,
-	VK_Tab,
+	vkBackspace,
+	vkTab,
 	// "ü",
-	VK_Plus,
-	VK_Enter,
-	VK_ControlLeft,
+	vkPlus,
+	vkEnter,
+	vkControlLeft,
 	// "ö",
 	// "ä",
 	// "^",
-	VK_ShiftLeft,
-	VK_Number, // #,
-	VK_Comma,
-	VK_Dot,
-	VK_Hyphen,
-	VK_ShiftRight,
-	VK_AltLeft,
-	VK_Space,
-	VK_CapsLock,
-	VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12,
-	VK_ScrollLock,
-	VK_NumpadLock,
-	VK_NumpadPlus,
-	VK_NumpadMinus,
-	VK_NumpadMult,
-	VK_NumpadDot,
-	VK_Numpad0, VK_Numpad1, VK_Numpad2, VK_Numpad3, VK_Numpad4, VK_Numpad5, VK_Numpad6, VK_Numpad7, VK_Numpad8, VK_Numpad9,
+	vkShiftLeft,
+	vkNumber, // #,
+	vkComma,
+	vkDot,
+	vkHyphen,
+	vkShiftRight,
+	vkAltLeft,
+	vkSpace,
+	vkCapsLock,
+	vkF1, vkF2, vkF3, vkF4, vkF5, vkF6, vkF7, vkF8, vkF9, vkF10, vkF11, vkF12,
+	vkScrollLock,
+	vkNumpadLock,
+	vkNumpadPlus,
+	vkNumpadMinus,
+	vkNumpadMult,
+	vkNumpadDot,
+	vkNumpad0, vkNumpad1, vkNumpad2, vkNumpad3, vkNumpad4, vkNumpad5, vkNumpad6, vkNumpad7, vkNumpad8, vkNumpad9,
 	
-	VK_LIMIT,
+	vkLIMIT,
 } vkey_t;
 
 
 /**
  * @brief Key definition on a key map.
  */
-typedef struct
+typedef struct key
 {
 	/**
 	 * @brief Virtual key code of this scancode.
@@ -101,30 +101,30 @@ typedef struct
 /**
  * @brief Defines different flags for key hits.
  */
-typedef enum 
+typedef enum keyhitflags
 {
-	KHF_None = 0,
+	khfNone = 0,
 	
 	/**
 	 * The key was pressed.
 	 */
-	KHF_KeyPress = (1 << 0),
+	khfKeyPress = (1 << 0),
 	
 	/**
 	 * @brief The key was released
 	 */
-	KHF_KeyRelease = (1 << 1),
+	khfKeyRelease = (1 << 1),
 	
 	/**
 	 * @brief A character was typed with this event.
 	 */
-	KHF_CharInput = (1 << 2),
+	khfCharInput = (1 << 2),
 } keyhitflags_t;
 
 /**
  * @brief A basic keyboard event
  */
-typedef struct
+typedef struct keyhit
 {
 	/**
 	 * @brief The scan code of the key that produces this key hit.
@@ -154,11 +154,13 @@ typedef struct
 /**
  * @brief RGBA color value.
  */
-typedef struct {
+typedef struct color 
+{
 	uint8_t r, g, b, a;
 } __attribute__ ((packed)) color_t;
 
-typedef struct {
+typedef struct videomode
+{
 	/**
 	 * @brief Size of the screen.
 	 */

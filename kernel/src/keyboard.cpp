@@ -5,11 +5,11 @@
 
 #include "syscalls.h"
 
-#define DEFKEY(name, vkey, lower, upper, variant) { VK_##vkey, lower, upper, variant }
+#define DEFKEY(name, vkey, lower, upper, variant) { vk##vkey, lower, upper, variant }
 
 const key_t keymap_set0[] = {
 	DEFKEY( "NUL/INVALID", Invalid, 0, 0, 0 ),
-	DEFKEY( "ESCAPE", Escape, 0, 0, 0 ),
+	DEFKEY( "ESCAPE", Escape, 0x1B, 0x1B, 0x1B ),
 	DEFKEY( "1", D1, '1', '!', 0 ),
 	DEFKEY( "2", D2, '2', '\"', 0 ),
 	DEFKEY( "3", D3, '3', 0, 0 ),
@@ -273,7 +273,7 @@ const key_t keymap_set0[] = {
 volatile uint32_t kbdEventQueueReadPtr = 0;
 volatile uint32_t kbdEventQueueWritePtr = 0;
 keyhit_t kbdEventQueue[KBD_EVENT_QUEUE_SIZE];
-bool kbdState[VK_LIMIT];
+bool kbdState[vkLIMIT];
 
 void kbd_intr(CpuState * & cpu)
 {
@@ -338,24 +338,24 @@ void kbd_intr(CpuState * & cpu)
 			keyhit_t event;
 			event.scanCode.set = scancode.set;
 			event.scanCode.code = scancode.code;
-			event.flags = KHF_None;
+			event.flags = khfNone;
 			event.key = keymap_set0[scancode.code];
 			
 			if(break_code) {
-				event.flags = (keyhitflags_t)(event.flags | KHF_KeyRelease);
+				event.flags = (keyhitflags_t)(event.flags | khfKeyRelease);
 			} else {
-				event.flags = (keyhitflags_t)(event.flags | KHF_KeyPress);
+				event.flags = (keyhitflags_t)(event.flags | khfKeyPress);
 			}
 			
 			// TODO: Add variant support with alt-graph here...
-			if(event.flags & KHF_KeyPress) {
-				if(kbdState[VK_ShiftLeft] || kbdState[VK_ShiftRight]) {
+			if(event.flags & khfKeyPress) {
+				if(kbdState[vkShiftLeft] || kbdState[vkShiftRight]) {
 					event.codepoint = event.key.upper;
 				} else {
 					event.codepoint = event.key.lower;
 				}
 				if(event.codepoint != 0) {
-					event.flags = (keyhitflags_t)(event.flags | KHF_CharInput);
+					event.flags = (keyhitflags_t)(event.flags | khfCharInput);
 				}
 			}
 			
@@ -393,7 +393,7 @@ extern "C" codepoint_t kbd_getchar()
 	keyhit_t key;
 	do {
 		kbd_getkey(&key, true);
-	} while(!(key.flags & KHF_CharInput));
+	} while(!(key.flags & khfCharInput));
 	return key.codepoint;
 }
 

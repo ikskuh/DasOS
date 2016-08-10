@@ -14,6 +14,7 @@ boot.img:
 		kernel/DasOS \
 		user/demo/demo \
 		user/game/game \
+		user/shell/shell \
 		user/filedemo/filedemo \
 		user/fontdemo/fontdemo \
 		../turtlefont/test.tfn \

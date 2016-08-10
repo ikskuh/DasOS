@@ -69,7 +69,9 @@ void main()
 	while(true)
 	{
 		char c = getchar();
-		
+		if(c == 0x1B) {
+			return;
+		}
 		putc(c);
 		
 		video_clear(background);

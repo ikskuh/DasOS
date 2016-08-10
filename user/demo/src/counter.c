@@ -12,11 +12,11 @@ void main()
 	{
 		keyhit_t hit;
 		getkey(&hit, true);
-		if(hit.key.key == VK_Escape) {
+		if(hit.key.key == vkEscape) {
 			break;
 		}
-		else if(hit.key.key == VK_Space) {
-			if(hit.flags & KHF_KeyPress) {
+		else if(hit.key.key == vkSpace) {
+			if(hit.flags & khfKeyPress) {
 				puts("Space was pressed!\n");
 			} else {
 				puts("Space was released!\n");

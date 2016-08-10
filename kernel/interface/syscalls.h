@@ -105,8 +105,6 @@ struct syscalls
 	 */
 	void (*fs_close)(int file);
 
-
-
 	/**
 	 * Reads a block of data from a file.
 	 * @param file   The file handle.
@@ -126,7 +124,6 @@ struct syscalls
 	 */
 	uint32_t (*file_size)(int file);
 
-
 	/**
 	 * Returns the number of entries in a directory.
 	 * @param file The file handle.
@@ -142,6 +139,25 @@ struct syscalls
 	 * @remarks     If the directory entry does not exist, the node will have the type ftInvalid.
 	 */
 	bool (*dir_get)(int file, int index, struct fsnode * node);
+	
+	/**
+	 * The file name of the program to execute
+	 * @param program Path to the program.
+	 */
+	void (*exec)(char const *program);
+	
+	/**
+	 * Sets the shell that should be called when a program is ended.
+	 * @param program The path of the shell.
+	 */
+	void (*os_set_shell)(char const * program);
+	
+	/**
+	 * Stops the execution.
+	 * @param errorCode An error code that is given to the OS.
+	 * @param 
+	 */
+	void (*exit)(int errorCode);
 	
 	void (*puts)(const char *text);
 	
@@ -174,6 +190,10 @@ extern struct syscalls SYSCALLS;
 
 #define dir_length (SYSCALLS.dir_length)
 #define dir_get (SYSCALLS.dir_get)
+
+#define exec (SYSCALLS.exec)
+#define os_set_shell (SYSCALLS.os_set_shell)
+#define exit (SYSCALLS.exit)
 
 #define puts (SYSCALLS.puts)
 #endif

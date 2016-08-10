@@ -30,11 +30,13 @@ void main()
 	
 	while(true)
 	{
-		if(is_pressed(VK_W)) y--;
-		if(is_pressed(VK_S)) y++;
+		if(is_pressed(vkW)) y--;
+		if(is_pressed(vkS)) y++;
 		
-		if(is_pressed(VK_A)) x--;
-		if(is_pressed(VK_D)) x++;
+		if(is_pressed(vkA)) x--;
+		if(is_pressed(vkD)) x++;
+		
+		if(is_pressed(vkEscape)) return;
 	
 		video_clear(background);
 		
