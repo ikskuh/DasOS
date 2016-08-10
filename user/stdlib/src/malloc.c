@@ -27,14 +27,25 @@ extern memlimits_t __memoryLimits;
 #define malloc_heap_start ((char *)&heap_start)
 #define malloc_heap_end ((char *)__memoryLimits.upper)
 
-// static char * const malloc_heap_start = (char *)&heap_start;
-// static char * const malloc_heap_end = (char *)0x800000;
-
-
 #define STACKDEPTH 8
 
-void die(const char *msg);
-void die_extra(const char *msg, const char *extra);
+static void die(const char *msg)
+{
+	puts("malloc: ");
+	puts(msg);
+	puts("\n");
+	exit(1);
+}
+
+static void die_extra(const char *msg, const char *extra)
+{
+	puts("malloc: ");
+	puts(msg);
+	puts(", ");
+	puts(extra);
+	puts("\n");
+	exit(1);
+}
 
 typedef struct List
 {
@@ -179,7 +190,8 @@ void *malloc(size_t len)
 	}
 
 	if(listBegin == NULL) {
-		listBegin = (List*)malloc_heap_start;
+		puts("Initialize malloc...\n");
+		listBegin = (List*)(malloc_heap_start + 0x1000); // todo: find out how and why..
 		listBegin->length = (intptr_t)malloc_heap_end - (intptr_t)malloc_heap_start - sizeof(List);
 		listBegin->used = 0;
 		listBegin->next = NULL;

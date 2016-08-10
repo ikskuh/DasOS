@@ -167,6 +167,8 @@ extern struct syscalls SYSCALLS;
 
 #if !defined(DASOS_KERNEL)
 
+static inline codepoint_t getchar() { return SYSCALLS.getchar(); }
+
 #define getchar (SYSCALLS.getchar)
 #define is_pressed (SYSCALLS.is_pressed)
 #define getkey (SYSCALLS.getkey)
@@ -185,7 +187,7 @@ extern struct syscalls SYSCALLS;
 #define fs_info (SYSCALLS.fs_info)
 #define fs_close (SYSCALLS.fs_close)
 
-#define file_size (SYSCALLS.file_size)
+static inline uint32_t file_size(int fd) { return SYSCALLS.file_size(fd); }
 #define file_read (SYSCALLS.file_read)
 
 #define dir_length (SYSCALLS.dir_length)

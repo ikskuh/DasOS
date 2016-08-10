@@ -4,9 +4,11 @@ MKICON = ../../mkicon/mkicon
 
 all: dirs $(PROGRAM)
 
-include ../../common.mk
+OBJS += tfont.o
 
-INCLUDE_DIRS += ../../kernel/interface/ include/ stdlib/include/
+INCLUDE_DIRS += ../../kernel/interface/ include/ ../stdlib/include/ ../../../turtlefont
+
+include ../../common.mk
 
 all: dirs $(PROGRAM)
 
@@ -18,5 +20,10 @@ icon.o: icon.png
 	objcopy -I binary -O elf32-i386 -B i386 --rename-section .data=icon icon.bin obj/icon.o
 	rm icon.bin
 
+tfont.o: ../../../turtlefont/tfont.c
+	$(CC) $(CFLAGS) -c -o obj/$@ $<
+	
 $(PROGRAM): $(OBJS) icon.o
-	$(LD) -L ../stdlib/lib/ -T../stdlib/linker.ld -o $@ $(addprefix obj/, $^) $(LDFLAGS) $(LIBS)
+	$(LD) -o $@ $(addprefix obj/, $^) $(LDFLAGS) $(LIBS) -L ../stdlib/lib -T../stdlib/linker.ld
+	
+	
