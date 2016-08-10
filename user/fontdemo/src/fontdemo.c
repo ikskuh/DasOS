@@ -64,6 +64,7 @@ void main()
 	tfont_setFont(&getGlyph);
 	tfont_setSize(16);
 	tfont_setDotSize(2);
+	tfont_setStroke(2);
 	
 	while(true)
 	{
