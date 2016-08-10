@@ -15,10 +15,7 @@
 #include "video.hpp"
 #include "timer.hpp"
 #include "fs.h"
-
-static const uint32_t USERSTART = 0x40000000;
-
-typedef void (*mainfunction_t)(struct syscalls *syscalls);
+#include "loader.hpp"
 
 VMMContext * kernelContext;
 
@@ -30,7 +27,7 @@ void initialize_pmm(multiboot::Structure const & mb);
 
 void initialize_vmm();
 
-mainfunction_t load_elf(multiboot::Module const & module);
+mainfunction_t load_elf_module(multiboot::Module const & module);
 
 void dasos_demo();
 
@@ -117,8 +114,31 @@ extern "C" void init(multiboot::Structure const & mb)
 	ASM::sti();
 	
 	if(mb.modules.length == 0) {
-		Console::main << "No multiboot modules found, starting demo...\n";
-		dasos_demo();
+		Console::main << "No multiboot modules declared, starting shell...\n";
+		
+		mainfunction_t main = load_elf("C:/shell");
+		
+		if(main == NULL)
+		{
+			Console::main << "Shell not found, starting demo...\n";
+			dasos_demo();
+			return;
+		}
+		
+		if(((uint32_t)main) < USERSTART)
+		{
+			Console::main << "Could not find a fitting entry point :(\n";
+			return;
+		}
+		
+		Console::main << "Starting program...\n";
+		{
+			loader_run(main);
+		}
+		Console::main << "Program finished.\n";
+
+		Console::main << "Maybe restart the shell here, huh?\n";
+		
 		return;
 	}
 	
@@ -126,7 +146,7 @@ extern "C" void init(multiboot::Structure const & mb)
 	
 	Console::main << "Loading module: " << module.name << "\n";
 	
-	mainfunction_t main = load_elf(module);
+	mainfunction_t main = load_elf_module(module);
 	
 	if(((uint32_t)main) < USERSTART)
 	{
@@ -185,7 +205,7 @@ static void blitIcon(void *ptr)
 	SYSCALLS.video_swap();
 }
 
-mainfunction_t load_elf(multiboot::Module const & module)
+mainfunction_t load_elf_module(multiboot::Module const & module)
 {
 	elf::Header const &file = *module.start.data<elf::Header const>();
 	if(file.magic != elf::MAGIC)
