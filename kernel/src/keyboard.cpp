@@ -34,11 +34,11 @@ const key_t keymap_set0[] = {
 	DEFKEY( "i", I, 'i', 'I', 0 ),
 	DEFKEY( "o", O, 'o', 'O', 0 ),
 	DEFKEY( "p", P, 'p', 'P', 0 ),
-	DEFKEY( "ü", Invalid, 'q', 'Q', 0 ), // TODO: Add virtual key code
-	DEFKEY( "+", Plus, 'q', 'Q', 0 ),
+	DEFKEY( "ü", Invalid, 'u', 'U', 0 ), // TODO: Add virtual key code
+	DEFKEY( "+", Plus, '+', '*', '~' ),
 	DEFKEY( "Enter", Enter, '\n', '\n', '\r' ),
 	DEFKEY( "CTRL-LEFT", ControlLeft, 0, 0, 0 ),
-		
+	
 	/* 30 */ DEFKEY( "a", A, 'a', 'A', 0 ),
 	/* 31 */ DEFKEY( "s", S, 's', 'S', 0 ),
 	/* 32 */ DEFKEY( "d", D, 'd', 'D', 0 ),

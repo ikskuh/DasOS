@@ -416,13 +416,13 @@ extern "C" int fs_open(char const * path)
 				Console::main << "file not found.\n";
 				return 0;
 			}
-				
+			/*
 			Console::main << "FN:        '" << fileName << "'\n";
 			Console::main << "PTH:       '" << path     << "'\n";
 			Console::main << "File Name: '";
 			Console::main.write(next.name, 11);
 			Console::main << "'\n";
-			
+			//*/
 			entry = next;
 			
 			// then follow up with Fat12 FAT indexing
@@ -543,6 +543,7 @@ extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t 
 	{
 		uint8_t clusterData[CLUSTER_SIZE];
 	
+		/*
 		Console::main
 			<< "Read: "
 			<< "cluster=" << cluster << ", "
@@ -551,6 +552,7 @@ extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t 
 			<< "len=" << length << ", "
 			<< "cur=" << cursor
 			<< "\n";
+		//*/
 		
 		// Read cluster here
 		read_cluster(

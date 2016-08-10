@@ -34,4 +34,5 @@ boot.img:
 run:
 	qemu-system-i386 \
 		-serial stdio \
-		-drive file=boot.img,media=disk,format=raw,if=ide
+		-drive file=boot.img,media=disk,format=raw,if=ide \
+		-enable-kvm
