@@ -31,7 +31,7 @@ struct fatheader16 FATExtendedHeader;
 #define SECTOR_SIZE (FATHeader.sectorSize)
 #define CLUSTER_SIZE (SECTOR_SIZE * FATHeader.clusterSize)
 
-uint8_t FAT[512 * 9];
+uint8_t FAT[512 * 16];
 
 uint32_t firstClusterSector;
 uint32_t invalidClusterIndex;
@@ -153,6 +153,7 @@ void fs_init()
 	Console::main << "Read total FAT...\n";
 	ATA_CHECKED(ata.read(FAT, FATHeader.reservedSectors, FATHeader.fatSize))
 	
+	Console::main << "FAT Sector Count: " << (uint32_t)FATHeader.fatSize << "\n";
 	
 	uint32_t rootLen = sizeof(directory_t) * FATHeader.rootMaxSize;
 	{ // Initialize FAT sector offset
@@ -430,7 +431,7 @@ extern "C" int fs_open(char const * path)
 			clusterToSector = &getSectorForCluster;
 			isRootDir = false;
 		}
-		Console::main << "open now.\n";
+		// Console::main << "open now.\n";
 	}
 	
 	files[fd].isOpen = true;
@@ -543,7 +544,7 @@ extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t 
 	{
 		uint8_t clusterData[CLUSTER_SIZE];
 	
-		/*
+		//*
 		Console::main
 			<< "Read: "
 			<< "cluster=" << cluster << ", "
@@ -564,6 +565,7 @@ extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t 
 			target[cursor++] = clusterData[i];
 			length -= 1;
 			if(length == 0) {
+				Console::main << "Done Reading with " << cursor << " bytes.\n";
 				return cursor;
 			}
 		}
@@ -575,6 +577,7 @@ extern "C" uint32_t file_read(int file, void *buffer,	uint32_t offset, uint32_t 
 			return cursor; // out of file
 		}
 	}
+	Console::main << "Done Reading with " << cursor << " bytes.\n";
 	return cursor;
 }
 

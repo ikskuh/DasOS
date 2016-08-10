@@ -6,7 +6,7 @@
 
 void tput(int x, int y, void *arg)
 {
-	video_setpixel(x, y, (color_t){ 255, 0, 0 });
+	video_setpixel(x, y, (color_t){ 255, 255, 255 });
 }
 
 struct glyph
@@ -58,6 +58,9 @@ void main()
 
 	color_t background = {32, 32, 32};
 	
+	video_clear((color_t){255, 0, 0});
+	video_swap(); // Required for back buffering
+	
 	load_font("C:/test.tfn");
 	
 	tfont_setPainter(&tput, NULL);
@@ -66,12 +69,16 @@ void main()
 	tfont_setDotSize(2);
 	tfont_setStroke(2);
 	
+	video_clear(background);
+	video_swap(); // Required for back buffering
+	
 	while(true)
 	{
 		char c = getchar();
 		if(c == 0x1B) {
 			return;
 		}
+		
 		putc(c);
 		
 		video_clear(background);
@@ -85,7 +92,7 @@ void main()
 }
 
 void load_font_next(char c)
-{
+{	
 	static int state = 0;
 	static char current;
 	static int cursor = 0;
@@ -118,18 +125,20 @@ void load_font(const char *path)
 	if(fd == 0)
 		return;
 	
-	char buffer[256];
+	puts("Load font ");
+	puts(path);
+	puts("\n");
+	
+	char buffer[1024];
 	int len = file_size(fd);
 	int cursor = 0;
 	while(cursor < len)
 	{
-		int l = file_read(fd, buffer, cursor, 256);
-		
+		int l = file_read(fd, buffer, cursor, 1024);
 		for(int i = 0; i < l; i++)
 		{
 			load_font_next(buffer[i]);
 		}
-		
 		cursor += l;
 	}
 	

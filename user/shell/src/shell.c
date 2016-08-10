@@ -61,19 +61,24 @@ void render();
 
 void main()
 {
+	puts("Setup font rendering...\n");
 	tfont_setFont(getGlyph);
 	tfont_setPainter(setPixel, NULL);
 	tfont_setSize(8);
 	
+	puts("Gather the files...\n");
 	gather();
 	
+	puts("Enter main loop...\n");
 	while(true)
 	{
+		puts("Mainloop.Render\n");
 		render();
 	
 		keyhit_t hit;
 		getkey(&hit, true);
 		
+		puts("Mainloop.EvaluateKeypress\n");
 		if(hit.flags & khfKeyPress)
 		{
 			switch(hit.key.key)
@@ -107,13 +112,10 @@ void render()
 	struct entry *e;
 	for(e = files, i = 0; e != NULL; e = e->next, i++)
 	{
-		puts(e->name);
-		puts("\n");
 		blitIcon(
 			e->icon, 
 			32 + 96 * i, 
 			32);
-		
 		int width = tfont_measure_string(e->name, 96, tfNone);
 		
 		if(e == selection) {
@@ -163,13 +165,13 @@ bool check_entry(struct fsnode * node)
 		if(programHeader.type != 0x10) {
 			continue;
 		}
-		
 		struct entry *entry = malloc(sizeof(struct entry));
 		
 		entry->prev = filesEnd;
 		entry->next = NULL;
 		strcpy(entry->name, node->name);
 		strcpy(entry->path, buffer);
+		
 		file_read(fd, entry->icon, programHeader.offset, 64*64*4);
 		
 		if(files != NULL) {
@@ -211,6 +213,9 @@ void gather()
 		struct fsnode node;
 		if(dir_get(fd, i, &node))
 		{
+			puts("Scan node: ");
+			puts(node.name);
+			puts("\n");
 			check_entry(&node);
 		}
 	}

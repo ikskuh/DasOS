@@ -168,10 +168,12 @@ extern struct syscalls SYSCALLS;
 #if !defined(DASOS_KERNEL)
 
 static inline codepoint_t getchar() { return SYSCALLS.getchar(); }
-
-#define getchar (SYSCALLS.getchar)
-#define is_pressed (SYSCALLS.is_pressed)
-#define getkey (SYSCALLS.getkey)
+static inline bool is_pressed(vkey_t key) {
+	return SYSCALLS.is_pressed(key);
+}
+static inline bool getkey(keyhit_t *hit, bool blocking) {
+	return SYSCALLS.getkey(hit, blocking);
+}
 
 #define video_clear (SYSCALLS.video_clear)
 #define video_buffer (SYSCALLS.video_buffer)
@@ -182,7 +184,7 @@ static inline codepoint_t getchar() { return SYSCALLS.getchar(); }
 #define timer_get (SYSCALLS.timer_get)
 #define timer_reset (SYSCALLS.timer_reset)
 
-static inline int fs_open(char *fileName) { return SYSCALLS.fs_open(fileName); }
+static inline int fs_open(char const * fileName) { return SYSCALLS.fs_open(fileName); }
 static inline enum filetype fs_type(int fd) { return SYSCALLS.fs_type(fd); }
 #define fs_info (SYSCALLS.fs_info)
 #define fs_close (SYSCALLS.fs_close)

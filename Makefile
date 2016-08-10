@@ -14,11 +14,10 @@ boot.img:
 		kernel/DasOS \
 		user/demo/demo \
 		user/game/game \
+		../turtlefont/test.tfn \
 		user/shell/shell \
 		user/filedemo/filedemo \
 		user/fontdemo/fontdemo \
-		../turtlefont/test.tfn \
-		resources/textfile.txt \
 		kernel/src/demo.cpp \
 		syslinux.cfg \
 		/boot/syslinux/libcom32.c32 \
@@ -28,12 +27,13 @@ boot.img:
 		/boot/syslinux/poweroff.c32 \
 		::
 	mmd -i boot.img ::/resource
+	mmd -i boot.img ::/fonts
 	mcopy -i boot.img resources/* ::/resource/
+	mcopy -i boot.img ../turtlefont/test.tfn ::/fonts/
 	syslinux boot.img
 	mdir -i boot.img ::
 
 run:
 	qemu-system-i386 \
 		-serial stdio \
-		-drive file=boot.img,media=disk,format=raw,if=ide \
-		-enable-kvm
+		-drive file=boot.img,media=disk,format=raw,if=ide

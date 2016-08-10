@@ -1,4 +1,5 @@
 #include "syscalls.h"
+#include "stdlib.h"
 
 struct syscalls SYSCALLS;
 
@@ -11,6 +12,15 @@ uint32_t memCursor;
 
 void *sbrk(intptr_t increment)
 {
+	static char buffer[256];
+	
+	strcpy(buffer, "sbrk(0x");
+	strcat(buffer, itoa(memCursor, NULL, 16));
+	strcat(buffer, ", 0x");
+	strcat(buffer, itoa(increment, NULL, 16));
+	strcat(buffer, ")\n");
+	puts(buffer);
+	
 	uint32_t val = memCursor;
 	memCursor += increment;
 	return (void*)val;
