@@ -51,29 +51,16 @@ static inline void *__movsw(void *d, const void *s, size_t n)
 
 extern "C" void video_swap()
 {
+	/*
 	char *src = (char*)video_buffer();
 	char *dst = (char*)videoMode.framebuffer;
 	uint32_t size = videoMode.pitch * videoMode.res.y;
 	__movsw(dst, src, size);
-}
-
-extern "C" void video_getmode(videomode_t *mode)
-{
-	if(mode == nullptr) return;
-	mode->width = videoMode.res.x;
-	mode->height = videoMode.res.y;
-	mode->stride = videoMode.pitch;
-	mode->bpp = videoMode.bpp;
-}
-
-extern "C" void video_setpixel(uint32_t x, uint32_t y, color_t color)
-{
-	uint8_t * pixels = (uint8_t*)video_buffer();
-	if(x >= videoMode.res.x) return;
-	if(y >= videoMode.res.y) return;
+	*/
+	color_t * source = (color_t*)video_buffer();
+	uint8_t * target = (uint8_t*)videoMode.framebuffer;
 	
 	uint32_t pixmask = (uint32_t)((1 << (int64_t)videoMode.bpp) - 1);
-	
 	int n = 1;
 	switch(videoMode.bpp) {
 		case 8:
@@ -90,22 +77,44 @@ extern "C" void video_setpixel(uint32_t x, uint32_t y, color_t color)
 			n = 4;
 			break;
 	}
-	uint32_t *pixel = (uint32_t*)&pixels[videoMode.pitch * y + n * x];
 	
-	if(videoMode.bpp == 32) {
-		// Just blit the color into the video buffer if we have 32 bpp
-		*pixel = *((uint32_t*)(&color));
-		if(videoMode.redPosition != 0) {
-			// Assert that if we don't have RGBX we will have XBGR
-			*pixel = __builtin_bswap32(*pixel) >> 8;
+	for(int y = 0; y < videoMode.res.y; y++) {
+		for(int x = 0; x < videoMode.res.x; x++) {
+			color_t color = source[videoMode.res.x * y + x];
+			uint32_t *pixel = (uint32_t*)&target[videoMode.pitch * y + n * x];
+			if(videoMode.bpp == 32) {
+				// Just blit the color into the video buffer if we have 32 bpp
+				*pixel = *((uint32_t*)(&color));
+				if(videoMode.redPosition != 0) {
+					// Assert that if we don't have RGBX we will have XBGR
+					*pixel = __builtin_bswap32(*pixel) >> 8;
+				}
+			} else {
+				*pixel = 
+					(~pixmask & *pixel) |
+					((((1<<videoMode.redMask) - 1) & color.r) << videoMode.redPosition) |
+					((((1<<videoMode.greenMask) - 1) & color.g) << videoMode.greenPosition) |
+					((((1<<videoMode.blueMask) - 1) & color.b) << videoMode.bluePosition);
+			}
 		}
-	} else {
-		*pixel = 
-			(~pixmask & *pixel) |
-			((((1<<videoMode.redMask) - 1) & color.r) << videoMode.redPosition) |
-			((((1<<videoMode.greenMask) - 1) & color.g) << videoMode.greenPosition) |
-			((((1<<videoMode.blueMask) - 1) & color.b) << videoMode.bluePosition);
 	}
+}
+
+extern "C" void video_getmode(videomode_t *mode)
+{
+	if(mode == nullptr) return;
+	mode->width = videoMode.res.x;
+	mode->height = videoMode.res.y;
+	mode->stride = videoMode.pitch;
+	mode->bpp = videoMode.bpp;
+}
+
+extern "C" void video_setpixel(uint32_t x, uint32_t y, color_t color)
+{
+	if(x >= videoMode.res.x) return;
+	if(y >= videoMode.res.y) return;
+	color_t *screen = (color_t*)video_buffer();
+	screen[y * videoMode.res.x + x] = color;
 }
 
 extern "C" void video_clear(color_t color)

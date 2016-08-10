@@ -5,8 +5,6 @@
 #include <stdarg.h>
 #include "config.h"
 
-#include "malloc.h"
-
 #if defined(__cplusplus)
 extern "C"  {
 #endif
@@ -54,11 +52,13 @@ static inline int memcmp(const void *s1, const void *s2, size_t n)
 
 static inline char *strcpy(char *destination, const char *source)
 {
-    while(*source)
+	char *dst = destination;
+	while(*source)
 	{
-		*(destination++) = *(source++);
+		*(dst++) = *(source++);
 	}
-	return destination;
+	*(dst++) = 0;
+	return dst;
 }
 
 static inline char *strcat(char *destination, const char *source)
@@ -103,24 +103,14 @@ static inline int strcmp(const char *p1, const char *p2)
 	return 0;
 }
 
-static inline char * strdup(const char *str)
-{
-	size_t len = strlen(str) + 1;
-	char * n = (char*)malloc(len);
-	memcpy(n, str, len);
-	return n;
-}
-
-static inline void *calloc(size_t size)
-{
-	void *mem = malloc(size);
-	memset(mem, 0, size);
-	return mem;
-}
-
 int sprintf(char *target, const char *format, ...);
 
 int vsprintf(char *target, const char *format, va_list vl);
+
+void *malloc(size_t size);
+void *calloc(size_t num, size_t size);
+void free(void *mem);
+void *realloc(void *mem, size_t size);
 
 #if defined(__cplusplus)
 }

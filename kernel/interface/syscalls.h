@@ -182,8 +182,8 @@ static inline codepoint_t getchar() { return SYSCALLS.getchar(); }
 #define timer_get (SYSCALLS.timer_get)
 #define timer_reset (SYSCALLS.timer_reset)
 
-#define fs_open (SYSCALLS.fs_open)
-#define fs_type (SYSCALLS.fs_type)
+static inline int fs_open(char *fileName) { return SYSCALLS.fs_open(fileName); }
+static inline enum filetype fs_type(int fd) { return SYSCALLS.fs_type(fd); }
 #define fs_info (SYSCALLS.fs_info)
 #define fs_close (SYSCALLS.fs_close)
 

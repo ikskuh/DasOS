@@ -25,8 +25,6 @@ static void blitIcon(void *ptr, int px, int py)
 	}
 }
 
-void ls();
-
 extern char const *font[128];
 
 char const * getGlyph(int codepoint)
@@ -37,19 +35,42 @@ char const * getGlyph(int codepoint)
 	return font[codepoint];
 }
 
+color_t fontColor = { 255, 0, 255 };
+
 void setPixel(int x, int y, void *arg)
 {
-	video_setpixel(x, y, (color_t) { 255, 0, 0 });
+	video_setpixel(x, y, fontColor);
 }
+
+struct entry
+{
+	char name[64];
+	char path[64];
+	char icon[64 * 64 * 4];
+	struct entry * prev;
+	struct entry * next;
+};
+
+struct entry *files = NULL;
+struct entry *filesEnd = NULL;
+struct entry *selection = NULL;
+
+void gather();
+
+void render();
 
 void main()
 {
 	tfont_setFont(getGlyph);
 	tfont_setPainter(setPixel, NULL);
 	tfont_setSize(8);
-	ls();
+	
+	gather();
+	
 	while(true)
 	{
+		render();
+	
 		keyhit_t hit;
 		getkey(&hit, true);
 		
@@ -57,30 +78,72 @@ void main()
 		{
 			switch(hit.key.key)
 			{
-				case vkNumpad1: exec("C:/filedemo");
-				case vkNumpad2: exec("C:/fontdemo");
-				case vkNumpad3: exec("C:/game");
+				case vkA:
+					if(selection != NULL && selection->prev != NULL)
+						selection = selection->prev;
+					break;
+				case vkD:
+					if(selection != NULL && selection->next != NULL)
+						selection = selection->next;
+					break;
+				case vkEnter:
+					if(selection != NULL)
+						exec(selection->path);
+					break;
 				default: break;
 			}
 		}
 	}
 }
 
-int left = 0;
+void render()
+{
+	video_clear((color_t) { 64, 64, 64 });
+	if(files == NULL) {
+		puts("No files found.\n");
+		return;
+	}
+	int i;
+	struct entry *e;
+	for(e = files, i = 0; e != NULL; e = e->next, i++)
+	{
+		puts(e->name);
+		puts("\n");
+		blitIcon(
+			e->icon, 
+			32 + 96 * i, 
+			32);
+		
+		int width = tfont_measure_string(e->name, 96, tfNone);
+		
+		if(e == selection) {
+			fontColor = (color_t){ 255, 0, 0 };
+		} else {
+			fontColor = (color_t){ 255, 255, 255 };
+		}
+		
+		tfont_render_string(
+			32 + 96 * i + (64 - width) / 2,
+			100 + tfont_getSize(),
+			e->name,
+			96,
+			tfNone);
+	}
+	
+	video_swap();
+}
 
-void check_entry(struct fsnode * node)
+bool check_entry(struct fsnode * node)
 {
 	if(node->type != ftFile) {
-		return;
+		return false;
 	}
 	char buffer[64];
 	strcpy(buffer, "C:/");
 	strcat(buffer, node->name);
-	puts(buffer);
-	puts("\n");
 	int fd = fs_open(buffer);
 	if(fd == 0) {
-		return;
+		return false;
 	}
 	
 	struct elf_header header;
@@ -89,48 +152,47 @@ void check_entry(struct fsnode * node)
 	if(header.magic != ELF_MAGIC)
 	{
 		fs_close(fd);
-		return;
+		return false;
 	}
 	
-	uint32_t index = header.ph_offset;
-	
-	for(uint32_t i = 0; i < header.ph_entry_count; i++, index += sizeof(struct elf_pheader))
+	uint32_t pointer = header.ph_offset;
+	for(uint32_t i = 0; i < header.ph_entry_count; i++, pointer += sizeof(struct elf_pheader))
 	{
 		struct elf_pheader programHeader;
-		file_read(fd, &programHeader, index, sizeof(struct elf_pheader));
+		file_read(fd, &programHeader, pointer, sizeof(struct elf_pheader));
 		if(programHeader.type != 0x10) {
 			continue;
 		}
 		
-		static char icon[64*64*4];
+		struct entry *entry = malloc(sizeof(struct entry));
 		
-		file_read(fd, icon, programHeader.offset, 64*64*4);
+		entry->prev = filesEnd;
+		entry->next = NULL;
+		strcpy(entry->name, node->name);
+		strcpy(entry->path, buffer);
+		file_read(fd, entry->icon, programHeader.offset, 64*64*4);
 		
-		blitIcon(
-			icon, 
-			32 + 96 * left, 
-			32);
+		if(files != NULL) {
+			filesEnd->next = entry;
+			filesEnd = entry;
+		} else {
+			files = entry;
+			filesEnd = entry;
+		}
+		if(selection == NULL) {
+			selection = entry;
+		}
 		
-		tfont_render_string(
-			32 + 96 * left,
-			100 + tfont_getSize(),
-			node->name,
-			96,
-			tfNone);
-		
-		left += 1;
-		
-		puts("found icon.\n");
-		break;
+		fs_close(fd);
+		return true;
 	}
 	
-	
 	fs_close(fd);
+	return false;
 }
 
-void ls()
+void gather()
 {
-	video_clear((color_t) { 64, 64, 64 });
 	puts("Listing root directory:\n");
 	
 	int fd = fs_open("C:/");
@@ -149,13 +211,9 @@ void ls()
 		struct fsnode node;
 		if(dir_get(fd, i, &node))
 		{
-			puts(node.name);
-			puts("\n");
 			check_entry(&node);
 		}
 	}
 	
 	puts("done.\n");
-	
-	video_swap();
 }
